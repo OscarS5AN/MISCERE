@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
   <style>
 @import url('https://fonts.googleapis.com/css2?familyMontserrat:wght@300;400;500;600;700&display=swap');
  * {
@@ -33,7 +34,6 @@ body {
     max-width: 100%;
     min-height: 480px;
 }
-
 
 .container p {
     font-size: 14px;
@@ -65,11 +65,21 @@ body {
     text-transform: uppercase;
     margin-top: 10px;
     cursor: pointer;
+    transition: all 0.3s;
+}
+
+.container button:hover {
+    background-color: #3e2385;
 }
 
 .container button.hidden {
     background-color: transparent;
     border-color: #fff;
+}
+
+.container button.hidden:hover {
+    background-color: #fff;
+    color: #3e2385;
 }
 
 .container form {
@@ -137,21 +147,6 @@ body {
     }
 }
 
-.social-icons {
-    margin: 20px 0;
-}
-
-.social-icons a {
-    border: 1px solid #ccc;
-    border-radius: 20%;
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0 3px;
-    width: 40px;
-    height: 40px;
-}
-
 .toggle-container {
     position: absolute;
     top: 0;
@@ -217,6 +212,163 @@ body {
 .container.active .toggle-right {
   transform: translateX(200%);
 }
+
+/* Nuevos estilos para el formulario de registro */
+.sign-up form {
+    overflow-y: auto;
+    padding: 20px 40px;
+}
+
+.sign-up form h2 {
+    margin-bottom: 8px;
+}
+
+.sign-up form input {
+    margin: 5px 0;
+    padding: 8px 15px;
+}
+
+.sign-up form button {
+    margin-top: 15px;
+}
+
+/* Estilos para el campo de teléfono internacional */
+.iti {
+    width: 100%;
+    margin: 8px 0;
+}
+
+.iti__selected-flag {
+    padding: 0 10px;
+}
+
+.iti__country-list {
+    font-size: 11px;
+    max-height: 165px;
+    width: 220px;
+    z-index: 9999 !important;
+    position: absolute !important;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    overflow-y: auto;
+}
+
+/* Estilos para la selección de tipo de usuario con iconos */
+.user-type-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.user-type-option {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.user-type-option:hover {
+    border-color: #b39ddb;
+    background-color: #f5f5f5;
+}
+
+.user-type-option.selected {
+    border-color: #512da8;
+    background-color: #ede7f6;
+}
+
+.user-type-icon {
+    width: 50px;
+    height: 50px;
+    background-color: #d1c4e9;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #512da8;
+    font-size: 20px;
+}
+
+.user-type-option.selected .user-type-icon {
+    background-color: #512da8;
+    color: white;
+}
+
+.user-type-info {
+    flex: 1;
+    text-align: left;
+}
+
+.user-type-info h3 {
+    margin: 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.user-type-info p {
+    margin: 5px 0 0;
+    color: #666;
+    font-size: 13px;
+}
+
+.user-type-check {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #512da8;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.user-type-option.selected .user-type-check {
+    opacity: 1;
+}
+
+#userTypeForm {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+#registerForm {
+    display: none;
+}
+
+/* Estilos para los botones de navegación */
+.form-navigation {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 0;
+}
+
+.form-navigation button {
+    margin: 0;
+    padding: 10px 25px;
+}
+
+#backButton {
+    background-color: #0DAD6A;
+}
+
+#backButton:hover {
+    background-color: #0B8A55;
+}
+
+#nextButton {
+    margin-left: auto;
+    display: block; 
+}
+
   </style>
   <title>Modern Login Page | AsmrProg</title>
 </head>
@@ -224,35 +376,79 @@ body {
 
   <div class="container" id="container">
     <div class="form-container sign-up">
-      <form>
-        <h1>Crea una Cuenta</h1>
-        <div class="social-icons">
-          <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
+      <form id="userTypeForm">
+        <h2>Elige cómo deseas registrarte</h2>
+        
+        <div class="user-type-container">
+            <div class="user-type-option" data-type="provider">
+                <div class="user-type-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="user-type-info">
+                    <h3>Proveedor</h3>
+                    <p>Ofrece productos a tiendas</p>
+                </div>
+                <div class="user-type-check">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="user-type-option" data-type="client">
+                <div class="user-type-icon">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-type-info">
+                    <h3>Cliente</h3>
+                    <p>Compra productos en las tiendas</p>
+                </div>
+                <div class="user-type-check">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="user-type-option" data-type="owner">
+                <div class="user-type-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="user-type-info">
+                    <h3>Dueño de tienda</h3>
+                    <p>Administra tu propia tienda física</p>
+                </div>
+                <div class="user-type-check">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
         </div>
-        <span>O usa tu correo para Registrase</span>
-        <input type="text" placeholder="Name">
-        <input type="email" placeholder="Email">
-        <input type="password" placeholder="Password">
-        <input type="text" placeholder="Confirm Password">
-        <button>Registrase</button>
+        
+        <input type="hidden" id="selectedUserType" name="userType" required>
+        
+        <div class="form-navigation">
+            <button type="button" id="nextButton">Siguiente</button>
+        </div>
+      </form>
+      
+      <form id="registerForm">
+        <h1>Crea una Cuenta</h1>
+        <span>Ingresa tus datos personales</span>
+        <input type="text" placeholder="Nombre" name="Nombre" required>
+        <input type="text" placeholder="Apellido" name="Apellido" required>
+        <input type="text" placeholder="Nombre de usuario" name="NombreUsuario" required>
+        <input type="email" placeholder="Correo electrónico" name="Correo" required>
+        <input type="tel" id="phone" placeholder="Teléfono" name="Telefono">
+        <input type="password" placeholder="Contraseña" name="Clave" required>
+        <input type="password" placeholder="Confirmar contraseña" name="ConfirmarClave" required>
+        
+        <div class="form-navigation">
+            <button type="button" id="backButton">Atrás</button>
+            <button type="submit">Registrarse</button>
+        </div>
       </form>
     </div>
 
     <div class="form-container sign-in">
       <form>
         <h1>Iniciar Sesion</h1>
-        <div class="social-icons">
-          <a href="#" class="icon"><i class="fa-brands fa-google-plus-g"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-facebook-f"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-github"></i></a>
-          <a href="#" class="icon"><i class="fa-brands fa-linkedin-in"></i></a>
-        </div>
-        <span>o usa tu contraseña de correo electrónico</span>
-        <input type="email" placeholder="Email">
-        <input type="password" placeholder="Password">
+        <span>Ingresa tus credenciales</span>
+        <input type="email" placeholder="Correo electrónico" name="Correo">
+        <input type="password" placeholder="Contraseña" name="Clave">
         <a href="#">¿Olvidaste tu contraseña?</a>
         <button>Iniciar Sesión</button>
       </form>
@@ -268,24 +464,96 @@ body {
         <div class="toggle-panel toggle-right">
           <h1>¡Hola, amigo!</h1>
           <p>Regístrate con tus datos personales para usar todas las funciones del sitio.</p>
-          <button class="hidden" id="register">Registrase</button>
+          <button class="hidden" id="register">Registrarse</button>
         </div>
       </div>
     </div>
 
   </div>
 
+  <!-- Añadimos el script del plugin intl-tel-input -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+  
   <script>
     const container = document.getElementById('container');
     const registerBtn = document.getElementById('register');
     const loginBtn = document.getElementById('login');
+    const nextButton = document.getElementById('nextButton');
+    const backButton = document.getElementById('backButton');
+    const userTypeForm = document.getElementById('userTypeForm');
+    const registerForm = document.getElementById('registerForm');
+    const selectedUserType = document.getElementById('selectedUserType');
+    const userTypeOptions = document.querySelectorAll('.user-type-option');
 
     registerBtn.addEventListener('click', () => {
-    container.classList.add('active');
+      container.classList.add('active');
     });
 
     loginBtn.addEventListener('click', () => {
-    container.classList.remove('active');
+      container.classList.remove('active');
+    });
+
+    // Selección de tipo de usuario con iconos
+    userTypeOptions.forEach(option => {
+      option.addEventListener('click', () => {
+        // Remover selección previa
+        userTypeOptions.forEach(opt => opt.classList.remove('selected'));
+        
+        // Marcar como seleccionado
+        option.classList.add('selected');
+        
+        // Guardar el valor seleccionado
+        selectedUserType.value = option.dataset.type;
+      });
+    });
+
+    nextButton.addEventListener('click', () => {
+      if (selectedUserType.value) {
+        userTypeForm.style.display = 'none';
+        registerForm.style.display = 'flex';
+      } else {
+        alert('Por favor selecciona un tipo de usuario');
+      }
+    });
+
+    backButton.addEventListener('click', () => {
+      registerForm.style.display = 'none';
+      userTypeForm.style.display = 'flex';
+    });
+
+    // Inicialización del plugin intl-tel-input
+    const phoneInput = document.querySelector("#phone");
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "auto",
+      geoIpLookup: function(callback) {
+        fetch('https://ipinfo.io/json')
+          .then(res => res.json())
+          .then(data => callback(data.country))
+          .catch(() => callback("us"));
+      },
+      preferredCountries: ["mx", "co", "es", "us", "ar", "pe", "cl", "ve"],
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
+
+    // Manejo del formulario de registro
+    registerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      // Obtenemos el número en formato internacional
+      const phoneNumber = iti.getNumber();
+      
+      // Asignamos el valor formateado al campo de teléfono
+      phoneInput.value = phoneNumber;
+      
+      // Aquí puedes enviar el formulario o hacer validaciones adicionales
+      console.log("Tipo de usuario seleccionado:", selectedUserType.value);
+      console.log("Número de teléfono en formato E.164:", phoneNumber);
+      
+      // Para propósitos de demostración, mostramos los datos
+      alert(`Registro como ${selectedUserType.value}\nTeléfono: ${phoneNumber}`);
+      
+      // Descomenta la siguiente línea para enviar el formulario
+      // this.submit();
     });
   </script>
 </body>
