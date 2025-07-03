@@ -405,6 +405,11 @@ body {
     color: #fff !important;
     border-color: #ccc !important;
 }
+
+.form-container.sign-in input[type="email"] {
+    margin-top: 20px;
+}
+
   </style>
   <title>Acceso a Miscere</title>
 </head>
@@ -463,7 +468,6 @@ body {
       
       <form id="registerForm">
         <h1>Crea una Cuenta</h1>
-        <span>Ingresa tus datos personales</span>
         <input type="text" placeholder="Nombre" name="Nombre" required>
         <input type="text" placeholder="Apellido" name="Apellido" required>
         <input type="text" placeholder="Nombre de usuario" name="NombreUsuario" required>
@@ -482,7 +486,6 @@ body {
     <div class="form-container sign-in">
       <form>
         <h1>Iniciar Sesion</h1>
-        <span>Ingresa tus credenciales</span>
         <input type="email" placeholder="Correo electrónico" name="Correo">
         <input type="password" placeholder="Contraseña" name="Clave">
         <a href="#">¿Olvidaste tu contraseña?</a>

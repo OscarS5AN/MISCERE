@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
 from datetime import datetime
+import secrets
 
 app = Flask(__name__, static_folder='static')
 app.config['SESSION_COOKIE_DOMAIN'] = None
@@ -26,22 +27,17 @@ def get_db_connection():
         conn = mysql.connector.connect(**db_config)
         if conn.is_connected():
             return conn
-    except Error:
+    except Error as e:
+        print(f"Error connecting to MySQL: {e}")
         return None
+    
 
-def test_database_connection():
-    try:
-        conn = mysql.connector.connect(**db_config)
-        if conn.is_connected():
-            cursor = conn.cursor()
-            cursor.execute("SHOW TABLES")
-            cursor.close()
-            conn.close()
-            return True
-    except Exception:
-        return False
+# ------------------- RUTA PRINCIPAL PARA SERVIR EL HTML -------------------
+@app.route('/', methods=['GET'])    
+def index():
+    return app.send_static_file('acceso.html')
 
-test_database_connection()
+
 
 # ------------------- PREVENCIÓN DE CACHÉ -------------------
 @app.after_request
