@@ -369,6 +369,42 @@ body {
     display: block; 
 }
 
+.divider {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    width: 100%;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider-text {
+    padding: 0 10px;
+    color: #777;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+
+.google-btn {
+  background: #fff !important;
+  color: #111 !important;
+  border: 1px solid #ddd !important;
+  border-radius: 25px !important;
+  font-size: 12px !important;
+  width: 100% !important;
+  padding: 10px 25px !important;
+}
+
+.google-btn:hover {
+    background: #512da8 !important;
+    color: #fff !important;
+    border-color: #ccc !important;
+}
   </style>
   <title>Acceso a Miscere</title>
 </head>
@@ -451,6 +487,16 @@ body {
         <input type="password" placeholder="Contraseña" name="Clave">
         <a href="#">¿Olvidaste tu contraseña?</a>
         <button>Iniciar Sesión</button>
+
+        <div class="divider">
+            <span class="divider-text">o</span>
+        </div>
+
+        <button type="button" class="google-btn">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;vertical-align:middle;margin-right:8px;">
+            Iniciar sesión con Google
+        </button>
+
       </form>
     </div>
 
