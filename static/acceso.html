@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+  <title>Acceso a Miscere</title>
+  <!-- Carga la API de Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
-@import url('https://fonts.googleapis.com/css2?familyMontserrat:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?familyMontserrat:wght@300;400;500;600;700&display=swap');
  * {
     margin: 0;
     padding: 0;
@@ -92,7 +95,7 @@ body {
     height: 100%;
 }
 
-.container input {
+.container input, .container select {
     background-color: #eee;
     border: none;
     margin: 8px 0;
@@ -223,7 +226,7 @@ body {
     margin-bottom: 8px;
 }
 
-.sign-up form input {
+.sign-up form input, .sign-up form select {
     margin: 5px 0;
     padding: 8px 15px;
 }
@@ -398,6 +401,9 @@ body {
   font-size: 12px !important;
   width: 100% !important;
   padding: 10px 25px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .google-btn:hover {
@@ -409,37 +415,85 @@ body {
 .form-container.sign-in input[type="email"] {
     margin-top: 20px;
 }
+    
+    /* Estilos adicionales para mensajes de error */
+    .error-message {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+    
+    .input-error {
+      border: 1px solid #d32f2f !important;
+    }
+    
+    .success-message {
+      color: #388e3c;
+      font-size: 14px;
+      margin: 10px 0;
+      text-align: center;
+    }
+    
+    /* Spinner para carga */
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
 
+    /* Estilos para los campos en línea */
+    .inline-fields {
+      display: flex;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .inline-fields > div {
+      flex: 1;
+    }
+
+    .inline-fields select,
+    .inline-fields input[type="date"] {
+      width: 100%;
+    }
   </style>
-  <title>Acceso a Miscere</title>
 </head>
 <body>
-
   <div class="container" id="container">
     <div class="form-container sign-up">
       <form id="userTypeForm">
         <h2>Elige cómo deseas registrarte</h2>
         
         <div class="user-type-container">
-            <div class="user-type-option" data-type="provider">
-                <div class="user-type-icon">
-                    <i class="fas fa-truck"></i>
-                </div>
-                <div class="user-type-info">
-                    <h3>Proveedor</h3>
-                    <p>Ofrece productos a tiendas</p>
-                </div>
-                <div class="user-type-check">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-            </div>
-            <div class="user-type-option" data-type="client">
+            <div class="user-type-option" data-type="cliente">
                 <div class="user-type-icon">
                     <i class="fas fa-user"></i>
                 </div>
                 <div class="user-type-info">
                     <h3>Cliente</h3>
                     <p>Compra productos en las tiendas</p>
+                </div>
+                <div class="user-type-check">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+            </div>
+            <div class="user-type-option" data-type="proveedor">
+                <div class="user-type-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <div class="user-type-info">
+                    <h3>Proveedor</h3>
+                    <p>Ofrece productos a tiendas</p>
                 </div>
                 <div class="user-type-check">
                     <i class="fas fa-check-circle"></i>
@@ -460,6 +514,7 @@ body {
         </div>
         
         <input type="hidden" id="selectedUserType" name="userType" required>
+        <div id="userTypeError" class="error-message">Por favor selecciona un tipo de usuario</div>
         
         <div class="form-navigation">
             <button type="button" id="nextButton">Siguiente</button>
@@ -468,38 +523,90 @@ body {
       
       <form id="registerForm">
         <h1>Crea una Cuenta</h1>
+        <div id="registerSuccess" class="success-message" style="display: none;"></div>
+        <div id="registerError" class="error-message" style="display: none;"></div>
+        
         <input type="text" placeholder="Nombre" name="Nombre" required>
+        <div id="nombreError" class="error-message"></div>
+        
         <input type="text" placeholder="Apellido" name="Apellido" required>
+        <div id="apellidoError" class="error-message"></div>
+        
         <input type="text" placeholder="Nombre de usuario" name="NombreUsuario" required>
+        <div id="usernameError" class="error-message"></div>
+        
         <input type="email" placeholder="Correo electrónico" name="Correo" required>
+        <div id="emailError" class="error-message"></div>
+        
         <input type="tel" id="phone" placeholder="Teléfono" name="Telefono">
-        <input type="password" placeholder="Contraseña" name="Clave" required>
+        <div id="phoneError" class="error-message"></div>
+        
+        <div class="inline-fields">
+            <div>
+                <select name="Genero" required>
+                    <option value="" disabled selected>Genero</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="femenino">Femenino</option>
+                    <option value="otro">Otro</option>
+                    <option value="prefiero_no_decir">Prefiero no decir</option>
+                </select>
+                <div id="generoError" class="error-message"></div>
+            </div>
+            <div>
+                <input type="date" placeholder="Fecha de nacimiento" name="FechaNacimiento" required>
+                <div id="fechaNacimientoError" class="error-message"></div>
+            </div>
+        </div>
+        
+        <input type="password" placeholder="Contraseña" name="Clave" required minlength="6">
+        <div id="passwordError" class="error-message"></div>
+        
         <input type="password" placeholder="Confirmar contraseña" name="ConfirmarClave" required>
+        <div id="confirmPasswordError" class="error-message"></div>
         
         <div class="form-navigation">
             <button type="button" id="backButton">Atrás</button>
-            <button type="submit">Registrarse</button>
+            <button type="submit" id="registerButton">Registrarse</button>
         </div>
       </form>
     </div>
 
     <div class="form-container sign-in">
-      <form>
-        <h1>Iniciar Sesion</h1>
-        <input type="email" placeholder="Correo electrónico" name="Correo">
-        <input type="password" placeholder="Contraseña" name="Clave">
+      <form id="loginForm">
+        <h1>Iniciar Sesión</h1>
+        <div id="loginError" class="error-message" style="display: none;"></div>
+        
+        <input type="email" placeholder="Correo electrónico" name="Correo" required>
+        <div id="loginEmailError" class="error-message"></div>
+        
+        <input type="password" placeholder="Contraseña" name="Clave" required>
+        <div id="loginPasswordError" class="error-message"></div>
+        
         <a href="#">¿Olvidaste tu contraseña?</a>
-        <button>Iniciar Sesión</button>
+        <button type="submit" id="loginButton">Iniciar Sesión</button>
 
         <div class="divider">
             <span class="divider-text">o</span>
         </div>
 
-        <button type="button" class="google-btn">
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px;vertical-align:middle;margin-right:8px;">
-            Iniciar sesión con Google
-        </button>
+        <!-- Botón de Google con GSI -->
+        <div id="g_id_onload"
+             data-client_id="TU_CLIENT_ID_GOOGLE"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleGoogleSignIn"
+             data-auto_prompt="false">
+        </div>
 
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left"
+             data-width="300">
+        </div>
       </form>
     </div>
 
@@ -517,13 +624,11 @@ body {
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Añadimos el script del plugin intl-tel-input -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
-  
   <script>
+    // Elementos del DOM
     const container = document.getElementById('container');
     const registerBtn = document.getElementById('register');
     const loginBtn = document.getElementById('login');
@@ -533,7 +638,15 @@ body {
     const registerForm = document.getElementById('registerForm');
     const selectedUserType = document.getElementById('selectedUserType');
     const userTypeOptions = document.querySelectorAll('.user-type-option');
+    const userTypeError = document.getElementById('userTypeError');
+    const registerButton = document.getElementById('registerButton');
+    const loginButton = document.getElementById('loginButton');
+    const loginForm = document.getElementById('loginForm');
+    const registerError = document.getElementById('registerError');
+    const loginError = document.getElementById('loginError');
+    const registerSuccess = document.getElementById('registerSuccess');
 
+    // Mostrar/ocultar formularios de registro
     registerBtn.addEventListener('click', () => {
       container.classList.add('active');
     });
@@ -542,27 +655,23 @@ body {
       container.classList.remove('active');
     });
 
-    // Selección de tipo de usuario con iconos
+    // Selección de tipo de usuario
     userTypeOptions.forEach(option => {
       option.addEventListener('click', () => {
-        // Remover selección previa
         userTypeOptions.forEach(opt => opt.classList.remove('selected'));
-        
-        // Marcar como seleccionado
         option.classList.add('selected');
-        
-        // Guardar el valor seleccionado
         selectedUserType.value = option.dataset.type;
+        userTypeError.style.display = 'none';
       });
     });
 
     nextButton.addEventListener('click', () => {
-      if (selectedUserType.value) {
-        userTypeForm.style.display = 'none';
-        registerForm.style.display = 'flex';
-      } else {
-        alert('Por favor selecciona un tipo de usuario');
+      if (!selectedUserType.value) {
+        userTypeError.style.display = 'block';
+        return;
       }
+      userTypeForm.style.display = 'none';
+      registerForm.style.display = 'flex';
     });
 
     backButton.addEventListener('click', () => {
@@ -585,25 +694,274 @@ body {
     });
 
     // Manejo del formulario de registro
-    registerForm.addEventListener('submit', function(e) {
+    registerForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       
-      // Obtenemos el número en formato internacional
-      const phoneNumber = iti.getNumber();
+      // Validar campos
+      const nombre = this.Nombre.value.trim();
+      const apellido = this.Apellido.value.trim();
+      const username = this.NombreUsuario.value.trim();
+      const email = this.Correo.value.trim();
+      const genero = this.Genero.value;
+      const fechaNacimiento = this.FechaNacimiento.value;
+      const password = this.Clave.value;
+      const confirmPassword = this.ConfirmarClave.value;
       
-      // Asignamos el valor formateado al campo de teléfono
-      phoneInput.value = phoneNumber;
+      // Resetear errores
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.style.display = 'none';
+        el.textContent = '';
+      });
+      document.querySelectorAll('input, select').forEach(input => {
+        input.classList.remove('input-error');
+      });
+      registerError.style.display = 'none';
       
-      // Aquí puedes enviar el formulario o hacer validaciones adicionales
-      console.log("Tipo de usuario seleccionado:", selectedUserType.value);
-      console.log("Número de teléfono en formato E.164:", phoneNumber);
+      let isValid = true;
       
-      // Para propósitos de demostración, mostramos los datos
-      alert(`Registro como ${selectedUserType.value}\nTeléfono: ${phoneNumber}`);
+      // Validaciones básicas
+      if (!nombre) {
+        document.getElementById('nombreError').textContent = 'El nombre es requerido';
+        document.getElementById('nombreError').style.display = 'block';
+        this.Nombre.classList.add('input-error');
+        isValid = false;
+      }
       
-      // Descomenta la siguiente línea para enviar el formulario
-      // this.submit();
+      if (!apellido) {
+        document.getElementById('apellidoError').textContent = 'El apellido es requerido';
+        document.getElementById('apellidoError').style.display = 'block';
+        this.Apellido.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!username) {
+        document.getElementById('usernameError').textContent = 'El nombre de usuario es requerido';
+        document.getElementById('usernameError').style.display = 'block';
+        this.NombreUsuario.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('emailError').textContent = 'Ingresa un correo electrónico válido';
+        document.getElementById('emailError').style.display = 'block';
+        this.Correo.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!genero) {
+        document.getElementById('generoError').textContent = 'El género es requerido';
+        document.getElementById('generoError').style.display = 'block';
+        this.Genero.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!fechaNacimiento) {
+        document.getElementById('fechaNacimientoError').textContent = 'La fecha de nacimiento es requerida';
+        document.getElementById('fechaNacimientoError').style.display = 'block';
+        this.FechaNacimiento.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (password.length < 6) {
+        document.getElementById('passwordError').textContent = 'La contraseña debe tener al menos 6 caracteres';
+        document.getElementById('passwordError').style.display = 'block';
+        this.Clave.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (password !== confirmPassword) {
+        document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+        document.getElementById('confirmPasswordError').style.display = 'block';
+        this.ConfirmarClave.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!isValid) return;
+      
+      // Obtener número de teléfono formateado
+      const phoneNumber = iti.isValidNumber() ? iti.getNumber() : null;
+      
+      // Mostrar spinner en el botón
+      const originalText = registerButton.innerHTML;
+      registerButton.innerHTML = '<span class="spinner"></span> Registrando...';
+      registerButton.disabled = true;
+      
+      try {
+        // Enviar datos al servidor
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            Nombre: nombre,
+            Apellido: apellido,
+            NombreUsuario: username,
+            Correo: email,
+            Telefono: phoneNumber,
+            Genero: genero,
+            FechaNacimiento: fechaNacimiento,
+            Clave: password,
+            ConfirmarClave: confirmPassword,
+            userType: selectedUserType.value
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error en el registro');
+        }
+        
+        // Registro exitoso
+        registerSuccess.textContent = `¡Registro exitoso! Bienvenido ${data.user_type}`;
+        registerSuccess.style.display = 'block';
+        
+        // Limpiar formulario
+        this.reset();
+        
+      } catch (error) {
+        registerError.textContent = error.message;
+        registerError.style.display = 'block';
+        console.error('Error en el registro:', error);
+      } finally {
+        registerButton.innerHTML = originalText;
+        registerButton.disabled = false;
+      }
     });
+
+    // Manejo del formulario de login
+    loginForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const email = this.Correo.value.trim();
+      const password = this.Clave.value;
+      
+      // Resetear errores
+      document.getElementById('loginEmailError').style.display = 'none';
+      document.getElementById('loginPasswordError').style.display = 'none';
+      loginError.style.display = 'none';
+      
+      let isValid = true;
+      
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        document.getElementById('loginEmailError').textContent = 'Ingresa un correo electrónico válido';
+        document.getElementById('loginEmailError').style.display = 'block';
+        this.Correo.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!password) {
+        document.getElementById('loginPasswordError').textContent = 'La contraseña es requerida';
+        document.getElementById('loginPasswordError').style.display = 'block';
+        this.Clave.classList.add('input-error');
+        isValid = false;
+      }
+      
+      if (!isValid) return;
+      
+      // Mostrar spinner en el botón
+      const originalText = loginButton.innerHTML;
+      loginButton.innerHTML = '<span class="spinner"></span> Iniciando sesión...';
+      loginButton.disabled = true;
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            Correo: email,
+            Clave: password
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error en el inicio de sesión');
+        }
+        
+        // Login exitoso, redirigir
+        window.location.href = '/panel.html';
+        
+      } catch (error) {
+        loginError.textContent = error.message;
+        loginError.style.display = 'block';
+        console.error('Error en el login:', error);
+      } finally {
+        loginButton.innerHTML = originalText;
+        loginButton.disabled = false;
+      }
+    });
+
+    // Manejo de autenticación con Google
+    function handleGoogleSignIn(response) {
+      console.log('Google response:', response);
+      
+      // Mostrar spinner en el botón de Google
+      const googleButton = document.querySelector('.g_id_signin');
+      googleButton.style.opacity = '0.5';
+      googleButton.innerHTML = '<span class="spinner"></span> Procesando...';
+      googleButton.disabled = true;
+      
+      // Enviar el token al servidor
+      fetch('/api/google-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          token: response.credential
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          throw new Error(data.error);
+        }
+        
+        // Autenticación exitosa, redirigir
+        window.location.href = '/panel.html';
+      })
+      .catch(error => {
+        loginError.textContent = error.message;
+        loginError.style.display = 'block';
+        console.error('Error en autenticación con Google:', error);
+        
+        // Reiniciar el botón de Google
+        google.accounts.id.renderButton(
+          googleButton,
+          {
+            type: 'standard',
+            shape: 'rectangular',
+            theme: 'outline',
+            text: 'signin_with',
+            size: 'large',
+            logo_alignment: 'left',
+            width: '300'
+          }
+        );
+      });
+    }
+
+    // Verificar si el usuario ya está autenticado
+    async function checkAuth() {
+      try {
+        const response = await fetch('/api/check-auth');
+        const data = await response.json();
+        
+        if (data.isAuthenticated) {
+          window.location.href = '/panel.html';
+        }
+      } catch (error) {
+        console.error('Error verificando autenticación:', error);
+      }
+    }
+
+    // Verificar autenticación al cargar la página
+    checkAuth();
   </script>
 </body>
 </html>
