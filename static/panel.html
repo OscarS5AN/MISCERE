@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Moderno</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #6A0DAD;
+            --primary-light: #9C27B0;
+            --primary-dark: #4A077C;
+            --text-color: #333;
+            --text-light: #666;
+            --bg-color: #f9f9f9;
+            --card-bg: #fff;
+            --border-color: #e0e0e0;
+            --header-height: 70px;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* Header Styles */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background-color: var(--card-bg);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        .menu-toggle {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            cursor: pointer;
+            margin-right: 20px;
+            transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .menu-toggle:hover {
+            background-color: rgba(106, 13, 173, 0.1);
+            transform: scale(1.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-right: 30px;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-light);
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            margin-left: auto;
+            gap: 15px;
+        }
+
+        .icon-container {
+            position: relative;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .icon-container:hover {
+            background-color: rgba(106, 13, 173, 0.1);
+            color: var(--primary-color);
+        }
+
+        .icon-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background-color: #E53935;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-image: linear-gradient(135deg, #6A0DAD, #9C27B0);
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            width: var(--sidebar-width);
+            height: calc(100vh - var(--header-height));
+            background-color: var(--card-bg);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transform: translateX(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-menu {
+            padding: 20px 0;
+            flex: 1;
+        }
+
+        .menu-item {
+            padding: 14px 25px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .menu-item::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(106, 13, 173, 0.1);
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: var(--primary-color);
+            transform: translateX(-100%);
+            transition: transform 0.3s;
+        }
+
+        .menu-item:hover {
+            background-color: rgba(106, 13, 173, 0.05);
+            color: var(--primary-color);
+        }
+
+        .menu-item:hover::before {
+            transform: translateX(0);
+        }
+
+        .menu-item.active {
+            background-color: rgba(106, 13, 173, 0.1);
+            color: var(--primary-color);
+        }
+
+        .menu-item.active::before {
+            transform: translateX(0);
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+            transition: transform 0.3s;
+        }
+
+        .menu-item.has-submenu i:last-child {
+            margin-left: auto;
+            margin-right: 0;
+            font-size: 0.9rem;
+            transition: transform 0.3s;
+        }
+
+        .menu-item.has-submenu.open i:last-child {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            background-color: rgba(106, 13, 173, 0.03);
+        }
+
+        .submenu.open {
+            max-height: 1000px;
+        }
+
+        .submenu-item {
+            padding: 12px 25px 12px 60px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            color: var(--text-light);
+            text-decoration: none;
+            display: block;
+        }
+
+        .submenu-item::before {
+            content: '';
+            position: absolute;
+            left: 45px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-light);
+            transition: all 0.3s;
+        }
+
+        .submenu-item:hover {
+            color: var(--primary-color);
+            background-color: rgba(106, 13, 173, 0.05);
+        }
+
+        .submenu-item:hover::before {
+            background-color: var(--primary-color);
+            transform: translateY(-50%) scale(1.3);
+        }
+
+        .submenu-item.active {
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .submenu-item.active::before {
+            background-color: var(--primary-color);
+            transform: translateY(-50%) scale(1.3);
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: var(--header-height);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Animations */
+        @keyframes fadeInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .menu-item {
+            animation: fadeInLeft 0.4s ease-out forwards;
+            opacity: 0;
+        }
+
+        .menu-item:nth-child(1) { animation-delay: 0.1s; }
+        .menu-item:nth-child(2) { animation-delay: 0.2s; }
+        .menu-item:nth-child(3) { animation-delay: 0.3s; }
+        .menu-item:nth-child(4) { animation-delay: 0.4s; }
+        .menu-item:nth-child(5) { animation-delay: 0.5s; }
+        .menu-item:nth-child(6) { animation-delay: 0.6s; }
+        .menu-item:nth-child(7) { animation-delay: 0.7s; }
+        .menu-item:nth-child(8) { animation-delay: 0.8s; }
+        .menu-item:nth-child(9) { animation-delay: 0.9s; }
+        .menu-item:nth-child(10) { animation-delay: 1s; }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .search-bar {
+                display: none;
+            }
+
+            .logo {
+                margin-right: auto;
+            }
+
+            .header-icons {
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="logo">MISCERE</div>
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" placeholder="Buscar productos...">
+        </div>
+        <div class="header-icons">
+            <div class="icon-container">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="icon-badge">3</span>
+            </div>
+            <div class="user-avatar" id="userAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-menu">
+            <a href="#" class="menu-item active">
+                <i class="fas fa-home"></i>
+                <span>Inicio</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-search"></i>
+                <span>Buscar</span>
+            </a>
+            
+            <div class="menu-item has-submenu">
+                <i class="fas fa-th-large"></i>
+                <span>Categorías</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <a href="#" class="submenu-item">Electrónicos</a>
+                <a href="#" class="submenu-item">Moda</a>
+                <a href="#" class="submenu-item">Hogar</a>
+                <a href="#" class="submenu-item">Deportes</a>
+                <a href="#" class="submenu-item active">Belleza</a>
+            </div>
+            
+            <a href="#" class="menu-item">
+                <i class="fas fa-store"></i>
+                <span>Tiendas</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-bell"></i>
+                <span>Notificaciones</span>
+            </a>
+            
+            <div class="menu-item has-submenu">
+                <i class="fas fa-truck"></i>
+                <span>Proveedores</span>
+                <i class="fas fa-chevron-down"></i>
+            </div>
+            <div class="submenu">
+                <a href="#" class="submenu-item">Calí valía</a>
+                <a href="#" class="submenu-item">Valle</a>
+                <a href="#" class="submenu-item">Vier más</a>
+            </div>
+            
+            <a href="#" class="menu-item">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Carrito</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-heart"></i>
+                <span>Favoritos</span>
+            </a>
+            <a href="#" class="menu-item">
+                <i class="fas fa-cog"></i>
+                <span>Configuración</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+        // Toggle sidebar
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            
+            // Bloquear scroll del body cuando el menú está abierto
+            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+        });
+
+        // Cerrar menú al hacer clic en el overlay
+        overlay.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        });
+
+        // Submenu functionality
+        const menuItems = document.querySelectorAll('.menu-item.has-submenu');
+        
+        menuItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                // Evitar que se cierre el menú al hacer clic en un ítem con submenú
+                e.stopPropagation();
+                
+                const submenu = item.nextElementSibling;
+                submenu.classList.toggle('open');
+                item.classList.toggle('open');
+            });
+        });
+
+        // Active menu item
+        const menuLinks = document.querySelectorAll('.menu-item:not(.has-submenu), .submenu-item');
+        
+        menuLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // Prevenir comportamiento por defecto solo para demostración
+                e.preventDefault();
+                
+                // Remover active de todos los ítems
+                menuLinks.forEach(l => l.classList.remove('active'));
+                
+                // Agregar active al ítem clickeado
+                link.classList.add('active');
+                
+                // Si es un submenú item, también activar su padre
+                if (link.classList.contains('submenu-item')) {
+                    link.closest('.submenu').previousElementSibling.classList.add('active');
+                }
+                
+                // Cerrar menú en móvil después de seleccionar
+                if (window.innerWidth < 769) {
+                    sidebar.classList.remove('open');
+                    overlay.classList.remove('active');
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+
+        // User avatar click
+        const userAvatar = document.getElementById('userAvatar');
+        userAvatar.addEventListener('click', () => {
+            alert('Menú de usuario');
+        });
+
+        // Cerrar menú al cambiar tamaño de pantalla
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 769) {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+        });
+    </script>
+</body>
+</html>
