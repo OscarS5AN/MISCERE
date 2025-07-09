@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css">
+  <title>Recuperar Contraseña - Miscere</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Montserrat', sans-serif;
+    }
+    
+    body {
+      background-color: #c9d6ff;
+      background: linear-gradient(to right, #e2e2e2, #c9d6ff);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .password-recovery-container {
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.35);
+      width: 100%;
+      max-width: 500px;
+      padding: 40px;
+    }
+    
+    .password-recovery-container h1 {
+      color: #512da8;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 24px;
+    }
+    
+    .recovery-tabs {
+      display: flex;
+      margin-bottom: 25px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .recovery-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px 0;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      font-weight: 500;
+      color: #666;
+    }
+    
+    .recovery-tab.active {
+      border-bottom: 3px solid #512da8;
+      color: #512da8;
+    }
+    
+    .recovery-content {
+      display: none;
+    }
+    
+    .recovery-content.active {
+      display: block;
+    }
+    
+    .recovery-instructions {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+    
+    .form-control:focus {
+      outline: none;
+      border-color: #512da8;
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #512da8;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-top: 10px;
+    }
+    
+    .btn:hover {
+      background-color: #3e2385;
+    }
+    
+    .btn-secondary {
+      background-color: #6c757d;
+    }
+    
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+    
+    .code-inputs {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    
+    .code-input {
+      width: 50px;
+      height: 50px;
+      text-align: center;
+      font-size: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    
+    .code-input:focus {
+      border-color: #512da8;
+      outline: none;
+    }
+    
+    .resend-code {
+      text-align: center;
+      margin-top: 15px;
+    }
+    
+    .resend-code a {
+      color: #512da8;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    
+    .resend-code a:hover {
+      text-decoration: underline;
+    }
+    
+    .timer {
+      color: #777;
+      font-size: 13px;
+    }
+    
+    .password-field {
+      position: relative;
+    }
+    
+    .toggle-password {
+      position: absolute;
+      right: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: #777;
+    }
+    
+    .error-message {
+      color: #d32f2f;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+    
+    .success-message {
+      color: #388e3c;
+      font-size: 14px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: #512da8;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="password-recovery-container">
+    <h1>Recuperar Contraseña</h1>
+    
+    <div class="recovery-tabs">
+      <div class="recovery-tab active" data-tab="email">Correo Electrónico</div>
+      <div class="recovery-tab" data-tab="phone">Teléfono</div>
+    </div>
+    
+    <!-- Contenido para recuperación por email -->
+    <div class="recovery-content active" id="emailRecovery">
+      <p class="recovery-instructions">Ingresa tu correo electrónico para recibir un código de verificación</p>
+      
+      <div class="form-group">
+        <label for="recoveryEmail">Correo Electrónico</label>
+        <input type="email" id="recoveryEmail" class="form-control" placeholder="tucorreo@ejemplo.com">
+        <div id="emailRecoveryError" class="error-message"></div>
+      </div>
+      
+      <button id="sendEmailCode" class="btn">Enviar Código</button>
+      
+      <div id="emailCodeSection" style="display: none;">
+        <p class="recovery-instructions">Ingresa el código de 6 dígitos que enviamos a tu correo</p>
+        
+        <div class="code-inputs">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+        </div>
+        
+        <div id="codeError" class="error-message"></div>
+        
+        <div class="resend-code">
+          <a id="resendEmailCode">Reenviar código</a>
+          <span class="timer" id="emailTimer">(00:60)</span>
+        </div>
+        
+        <button id="verifyEmailCode" class="btn">Verificar Código</button>
+      </div>
+      
+      <div id="newPasswordSection" style="display: none;">
+        <p class="recovery-instructions">Ingresa tu nueva contraseña</p>
+        
+        <div class="form-group">
+          <label for="newPassword">Nueva Contraseña</label>
+          <div class="password-field">
+            <input type="password" id="newPassword" class="form-control" placeholder="Mínimo 6 caracteres">
+            <i class="fas fa-eye toggle-password" id="toggleNewPassword"></i>
+          </div>
+          <div id="newPasswordError" class="error-message"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmNewPassword">Confirmar Nueva Contraseña</label>
+          <div class="password-field">
+            <input type="password" id="confirmNewPassword" class="form-control" placeholder="Confirma tu contraseña">
+            <i class="fas fa-eye toggle-password" id="toggleConfirmPassword"></i>
+          </div>
+          <div id="confirmPasswordError" class="error-message"></div>
+        </div>
+        
+        <button id="updatePassword" class="btn">Actualizar Contraseña</button>
+      </div>
+    </div>
+    
+    <!-- Contenido para recuperación por teléfono -->
+    <div class="recovery-content" id="phoneRecovery">
+      <p class="recovery-instructions">Ingresa tu número de teléfono para recibir un código de verificación</p>
+      
+      <div class="form-group">
+        <label for="recoveryPhone">Número de Teléfono</label>
+        <input type="tel" id="recoveryPhone" class="form-control" placeholder="Ingresa el teléfono">
+        <div id="phoneRecoveryError" class="error-message"></div>
+      </div>
+      
+      <button id="sendPhoneCode" class="btn">Enviar Código</button>
+      
+      <div id="phoneCodeSection" style="display: none;">
+        <p class="recovery-instructions">Ingresa el código de 6 dígitos que enviamos a tu teléfono</p>
+        
+        <div class="code-inputs">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+          <input type="text" maxlength="1" class="code-input">
+        </div>
+        
+        <div id="phoneCodeError" class="error-message"></div>
+        
+        <div class="resend-code">
+          <a id="resendPhoneCode">Reenviar código</a>
+          <span class="timer" id="phoneTimer">(00:60)</span>
+        </div>
+        
+        <button id="verifyPhoneCode" class="btn">Verificar Código</button>
+      </div>
+      
+      <div id="newPasswordSectionPhone" style="display: none;">
+        <p class="recovery-instructions">Ingresa tu nueva contraseña</p>
+        
+        <div class="form-group">
+          <label for="newPasswordPhone">Nueva Contraseña</label>
+          <div class="password-field">
+            <input type="password" id="newPasswordPhone" class="form-control" placeholder="Mínimo 6 caracteres">
+            <i class="fas fa-eye toggle-password" id="toggleNewPasswordPhone"></i>
+          </div>
+          <div id="newPasswordErrorPhone" class="error-message"></div>
+        </div>
+        
+        <div class="form-group">
+          <label for="confirmNewPasswordPhone">Confirmar Nueva Contraseña</label>
+          <div class="password-field">
+            <input type="password" id="confirmNewPasswordPhone" class="form-control" placeholder="Confirma tu contraseña">
+            <i class="fas fa-eye toggle-password" id="toggleConfirmPasswordPhone"></i>
+          </div>
+          <div id="confirmPasswordErrorPhone" class="error-message"></div>
+        </div>
+        
+        <button id="updatePasswordPhone" class="btn">Actualizar Contraseña</button>
+      </div>
+    </div>
+    
+    <a href="acceso.html" class="back-link">Volver al inicio de sesión</a>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+  <script>
+    // Inicialización del input de teléfono internacional
+    const recoveryPhoneInput = document.querySelector("#recoveryPhone");
+    const recoveryIti = window.intlTelInput(recoveryPhoneInput, {
+      initialCountry: "auto",
+      geoIpLookup: function(callback) {
+        fetch('https://ipinfo.io/json')
+          .then(res => res.json())
+          .then(data => callback(data.country))
+          .catch(() => callback("us"));
+      },
+      preferredCountries: ["mx", "co", "es", "us", "ar", "pe", "cl", "ve"],
+      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+    });
+    
+    // Cambiar entre pestañas de recuperación
+    const recoveryTabs = document.querySelectorAll('.recovery-tab');
+    const recoveryContents = document.querySelectorAll('.recovery-content');
+    
+    recoveryTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        recoveryTabs.forEach(t => t.classList.remove('active'));
+        recoveryContents.forEach(c => c.classList.remove('active'));
+        
+        tab.classList.add('active');
+        const tabId = tab.getAttribute('data-tab');
+        document.getElementById(`${tabId}Recovery`).classList.add('active');
+      });
+    });
+    
+    // Manejo de código de verificación (inputs automáticos)
+    const codeInputs = document.querySelectorAll('.code-input');
+    codeInputs.forEach((input, index) => {
+      input.addEventListener('input', (e) => {
+        if (e.target.value.length === 1 && index < codeInputs.length - 1) {
+          codeInputs[index + 1].focus();
+        }
+      });
+      
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+          codeInputs[index - 1].focus();
+        }
+      });
+    });
+    
+    // Toggle para mostrar/ocultar contraseña
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+      toggle.addEventListener('click', function() {
+        const input = this.previousElementSibling;
+        const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+        input.setAttribute('type', type);
+        this.classList.toggle('fa-eye-slash');
+      });
+    });
+    
+    // Función para iniciar temporizador
+    function startTimer(elementId, seconds, callback) {
+      const timerElement = document.getElementById(elementId);
+      const resendLink = timerElement.previousElementSibling;
+      
+      resendLink.style.display = 'none';
+      let remaining = seconds;
+      
+      timerElement.textContent = `(00:${remaining.toString().padStart(2, '0')})`;
+      
+      const timer = setInterval(() => {
+        remaining--;
+        timerElement.textContent = `(00:${remaining.toString().padStart(2, '0')})`;
+        
+        if (remaining <= 0) {
+          clearInterval(timer);
+          if (callback) callback();
+        }
+      }, 1000);
+    }
+    
+    // Enviar código por email
+    document.getElementById('sendEmailCode').addEventListener('click', async () => {
+      const email = document.getElementById('recoveryEmail').value.trim();
+      const emailError = document.getElementById('emailRecoveryError');
+      
+      emailError.textContent = '';
+      emailError.style.display = 'none';
+      
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        emailError.textContent = 'Ingresa un correo electrónico válido';
+        emailError.style.display = 'block';
+        return;
+      }
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('sendEmailCode').innerHTML;
+      document.getElementById('sendEmailCode').innerHTML = '<span class="spinner"></span> Enviando...';
+      document.getElementById('sendEmailCode').disabled = true;
+      
+      try {
+        // Verificar si el email existe en la base de datos
+        const response = await fetch('/api/check-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al verificar el email');
+        }
+        
+        if (!data.exists) {
+          throw new Error('No existe una cuenta asociada a este correo electrónico');
+        }
+        
+        // Enviar código de verificación
+        const codeResponse = await fetch('/api/send-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email,
+            method: 'email'
+          })
+        });
+        
+        const codeData = await codeResponse.json();
+        
+        if (!codeResponse.ok) {
+          throw new Error(codeData.error || 'Error al enviar el código');
+        }
+        
+        // Mostrar sección de código
+        document.getElementById('emailCodeSection').style.display = 'block';
+        startTimer('emailTimer', 60, () => {
+          document.getElementById('resendEmailCode').style.display = 'inline';
+        });
+        
+      } catch (error) {
+        emailError.textContent = error.message;
+        emailError.style.display = 'block';
+        console.error('Error en recuperación por email:', error);
+      } finally {
+        document.getElementById('sendEmailCode').innerHTML = originalText;
+        document.getElementById('sendEmailCode').disabled = false;
+      }
+    });
+    
+    // Enviar código por teléfono
+    document.getElementById('sendPhoneCode').addEventListener('click', async () => {
+      const phoneInput = document.getElementById('recoveryPhone');
+      const phoneError = document.getElementById('phoneRecoveryError');
+      
+      phoneError.textContent = '';
+      phoneError.style.display = 'none';
+      
+      if (!recoveryIti.isValidNumber()) {
+        phoneError.textContent = 'Ingresa un número de teléfono válido';
+        phoneError.style.display = 'block';
+        return;
+      }
+      
+      const phoneNumber = recoveryIti.getNumber();
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('sendPhoneCode').innerHTML;
+      document.getElementById('sendPhoneCode').innerHTML = '<span class="spinner"></span> Enviando...';
+      document.getElementById('sendPhoneCode').disabled = true;
+      
+      try {
+        // Verificar si el teléfono existe en la base de datos
+        const response = await fetch('/api/check-phone', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ phone: phoneNumber })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al verificar el teléfono');
+        }
+        
+        if (!data.exists) {
+          throw new Error('No existe una cuenta asociada a este número de teléfono');
+        }
+        
+        // Enviar código de verificación
+        const codeResponse = await fetch('/api/send-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            phone: phoneNumber,
+            method: 'phone'
+          })
+        });
+        
+        const codeData = await codeResponse.json();
+        
+        if (!codeResponse.ok) {
+          throw new Error(codeData.error || 'Error al enviar el código');
+        }
+        
+        // Mostrar sección de código
+        document.getElementById('phoneCodeSection').style.display = 'block';
+        startTimer('phoneTimer', 60, () => {
+          document.getElementById('resendPhoneCode').style.display = 'inline';
+        });
+        
+      } catch (error) {
+        phoneError.textContent = error.message;
+        phoneError.style.display = 'block';
+        console.error('Error en recuperación por teléfono:', error);
+      } finally {
+        document.getElementById('sendPhoneCode').innerHTML = originalText;
+        document.getElementById('sendPhoneCode').disabled = false;
+      }
+    });
+    
+    // Verificar código de email
+    document.getElementById('verifyEmailCode').addEventListener('click', async () => {
+      const code = Array.from(document.querySelectorAll('#emailCodeSection .code-input'))
+                        .map(input => input.value)
+                        .join('');
+      const codeError = document.getElementById('codeError');
+      
+      codeError.textContent = '';
+      codeError.style.display = 'none';
+      
+      if (code.length !== 6) {
+        codeError.textContent = 'Ingresa un código de 6 dígitos';
+        codeError.style.display = 'block';
+        return;
+      }
+      
+      const email = document.getElementById('recoveryEmail').value.trim();
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('verifyEmailCode').innerHTML;
+      document.getElementById('verifyEmailCode').innerHTML = '<span class="spinner"></span> Verificando...';
+      document.getElementById('verifyEmailCode').disabled = true;
+      
+      try {
+        // Verificar el código
+        const response = await fetch('/api/verify-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email,
+            code,
+            method: 'email'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al verificar el código');
+        }
+        
+        // Mostrar sección de nueva contraseña
+        document.getElementById('emailCodeSection').style.display = 'none';
+        document.getElementById('newPasswordSection').style.display = 'block';
+        
+      } catch (error) {
+        codeError.textContent = error.message;
+        codeError.style.display = 'block';
+        console.error('Error al verificar código:', error);
+      } finally {
+        document.getElementById('verifyEmailCode').innerHTML = originalText;
+        document.getElementById('verifyEmailCode').disabled = false;
+      }
+    });
+    
+    // Verificar código de teléfono
+    document.getElementById('verifyPhoneCode').addEventListener('click', async () => {
+      const code = Array.from(document.querySelectorAll('#phoneCodeSection .code-input'))
+                        .map(input => input.value)
+                        .join('');
+      const codeError = document.getElementById('phoneCodeError');
+      
+      codeError.textContent = '';
+      codeError.style.display = 'none';
+      
+      if (code.length !== 6) {
+        codeError.textContent = 'Ingresa un código de 6 dígitos';
+        codeError.style.display = 'block';
+        return;
+      }
+      
+      const phoneNumber = recoveryIti.getNumber();
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('verifyPhoneCode').innerHTML;
+      document.getElementById('verifyPhoneCode').innerHTML = '<span class="spinner"></span> Verificando...';
+      document.getElementById('verifyPhoneCode').disabled = true;
+      
+      try {
+        // Verificar el código
+        const response = await fetch('/api/verify-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            phone: phoneNumber,
+            code,
+            method: 'phone'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al verificar el código');
+        }
+        
+        // Mostrar sección de nueva contraseña
+        document.getElementById('phoneCodeSection').style.display = 'none';
+        document.getElementById('newPasswordSectionPhone').style.display = 'block';
+        
+      } catch (error) {
+        codeError.textContent = error.message;
+        codeError.style.display = 'block';
+        console.error('Error al verificar código:', error);
+      } finally {
+        document.getElementById('verifyPhoneCode').innerHTML = originalText;
+        document.getElementById('verifyPhoneCode').disabled = false;
+      }
+    });
+    
+    // Actualizar contraseña (email)
+    document.getElementById('updatePassword').addEventListener('click', async () => {
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmNewPassword').value;
+      const passwordError = document.getElementById('newPasswordError');
+      const confirmError = document.getElementById('confirmPasswordError');
+      
+      passwordError.textContent = '';
+      passwordError.style.display = 'none';
+      confirmError.textContent = '';
+      confirmError.style.display = 'none';
+      
+      if (newPassword.length < 6) {
+        passwordError.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        passwordError.style.display = 'block';
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        confirmError.textContent = 'Las contraseñas no coinciden';
+        confirmError.style.display = 'block';
+        return;
+      }
+      
+      const email = document.getElementById('recoveryEmail').value.trim();
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('updatePassword').innerHTML;
+      document.getElementById('updatePassword').innerHTML = '<span class="spinner"></span> Actualizando...';
+      document.getElementById('updatePassword').disabled = true;
+      
+      try {
+        // Actualizar contraseña
+        const response = await fetch('/api/update-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email,
+            newPassword,
+            method: 'email'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al actualizar la contraseña');
+        }
+        
+        // Mostrar mensaje de éxito
+        document.getElementById('newPasswordSection').innerHTML = `
+          <div class="success-message">
+            <i class="fas fa-check-circle"></i>
+            <p>¡Contraseña actualizada correctamente!</p>
+            <p>Ahora puedes iniciar sesión con tu nueva contraseña.</p>
+          </div>
+        `;
+        
+      } catch (error) {
+        passwordError.textContent = error.message;
+        passwordError.style.display = 'block';
+        console.error('Error al actualizar contraseña:', error);
+      } finally {
+        document.getElementById('updatePassword').innerHTML = originalText;
+        document.getElementById('updatePassword').disabled = false;
+      }
+    });
+    
+    // Actualizar contraseña (teléfono)
+    document.getElementById('updatePasswordPhone').addEventListener('click', async () => {
+      const newPassword = document.getElementById('newPasswordPhone').value;
+      const confirmPassword = document.getElementById('confirmNewPasswordPhone').value;
+      const passwordError = document.getElementById('newPasswordErrorPhone');
+      const confirmError = document.getElementById('confirmPasswordErrorPhone');
+      
+      passwordError.textContent = '';
+      passwordError.style.display = 'none';
+      confirmError.textContent = '';
+      confirmError.style.display = 'none';
+      
+      if (newPassword.length < 6) {
+        passwordError.textContent = 'La contraseña debe tener al menos 6 caracteres';
+        passwordError.style.display = 'block';
+        return;
+      }
+      
+      if (newPassword !== confirmPassword) {
+        confirmError.textContent = 'Las contraseñas no coinciden';
+        confirmError.style.display = 'block';
+        return;
+      }
+      
+      const phoneNumber = recoveryIti.getNumber();
+      
+      // Mostrar spinner
+      const originalText = document.getElementById('updatePasswordPhone').innerHTML;
+      document.getElementById('updatePasswordPhone').innerHTML = '<span class="spinner"></span> Actualizando...';
+      document.getElementById('updatePasswordPhone').disabled = true;
+      
+      try {
+        // Actualizar contraseña
+        const response = await fetch('/api/update-password', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            phone: phoneNumber,
+            newPassword,
+            method: 'phone'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Error al actualizar la contraseña');
+        }
+        
+        // Mostrar mensaje de éxito
+        document.getElementById('newPasswordSectionPhone').innerHTML = `
+          <div class="success-message">
+            <i class="fas fa-check-circle"></i>
+            <p>¡Contraseña actualizada correctamente!</p>
+            <p>Ahora puedes iniciar sesión con tu nueva contraseña.</p>
+          </div>
+        `;
+        
+      } catch (error) {
+        passwordError.textContent = error.message;
+        passwordError.style.display = 'block';
+        console.error('Error al actualizar contraseña:', error);
+      } finally {
+        document.getElementById('updatePasswordPhone').innerHTML = originalText;
+        document.getElementById('updatePasswordPhone').disabled = false;
+      }
+    });
+    
+    // Reenviar código por email
+    document.getElementById('resendEmailCode').addEventListener('click', async () => {
+      const email = document.getElementById('recoveryEmail').value.trim();
+      const codeError = document.getElementById('codeError');
+      
+      codeError.textContent = '';
+      codeError.style.display = 'none';
+      
+      // Resetear inputs de código
+      codeInputs.forEach(input => input.value = '');
+      
+      // Mostrar spinner en el botón de reenvío
+      const originalText = document.getElementById('resendEmailCode').innerHTML;
+      document.getElementById('resendEmailCode').innerHTML = '<span class="spinner"></span> Enviando...';
+      document.getElementById('resendEmailCode').style.pointerEvents = 'none';
+      
+      try {
+        // Reenviar código de verificación
+        const codeResponse = await fetch('/api/send-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            email,
+            method: 'email'
+          })
+        });
+        
+        const codeData = await codeResponse.json();
+        
+        if (!codeResponse.ok) {
+          throw new Error(codeData.error || 'Error al reenviar el código');
+        }
+        
+        // Reiniciar temporizador
+        document.getElementById('resendEmailCode').style.display = 'none';
+        startTimer('emailTimer', 60, () => {
+          document.getElementById('resendEmailCode').style.display = 'inline';
+        });
+        
+      } catch (error) {
+        codeError.textContent = error.message;
+        codeError.style.display = 'block';
+        console.error('Error al reenviar código:', error);
+      } finally {
+        document.getElementById('resendEmailCode').innerHTML = originalText;
+        document.getElementById('resendEmailCode').style.pointerEvents = 'auto';
+      }
+    });
+    
+    // Reenviar código por teléfono
+    document.getElementById('resendPhoneCode').addEventListener('click', async () => {
+      const phoneNumber = recoveryIti.getNumber();
+      const codeError = document.getElementById('phoneCodeError');
+      
+      codeError.textContent = '';
+      codeError.style.display = 'none';
+      
+      // Resetear inputs de código
+      codeInputs.forEach(input => input.value = '');
+      
+      // Mostrar spinner en el botón de reenvío
+      const originalText = document.getElementById('resendPhoneCode').innerHTML;
+      document.getElementById('resendPhoneCode').innerHTML = '<span class="spinner"></span> Enviando...';
+      document.getElementById('resendPhoneCode').style.pointerEvents = 'none';
+      
+      try {
+        // Reenviar código de verificación
+        const codeResponse = await fetch('/api/send-recovery-code', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            phone: phoneNumber,
+            method: 'phone'
+          })
+        });
+        
+        const codeData = await codeResponse.json();
+        
+        if (!codeResponse.ok) {
+          throw new Error(codeData.error || 'Error al reenviar el código');
+        }
+        
+        // Reiniciar temporizador
+        document.getElementById('resendPhoneCode').style.display = 'none';
+        startTimer('phoneTimer', 60, () => {
+          document.getElementById('resendPhoneCode').style.display = 'inline';
+        });
+        
+      } catch (error) {
+        codeError.textContent = error.message;
+        codeError.style.display = 'block';
+        console.error('Error al reenviar código:', error);
+      } finally {
+        document.getElementById('resendPhoneCode').innerHTML = originalText;
+        document.getElementById('resendPhoneCode').style.pointerEvents = 'auto';
+      }
+    });
+  </script>
+</body>
+</html>
