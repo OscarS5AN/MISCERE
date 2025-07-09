@@ -589,24 +589,10 @@ body {
             <span class="divider-text">o</span>
         </div>
 
-        <!-- Botón de Google con GSI -->
-        <div id="g_id_onload"
-             data-client_id="TU_CLIENT_ID_GOOGLE"
-             data-context="signin"
-             data-ux_mode="popup"
-             data-callback="handleGoogleSignIn"
-             data-auto_prompt="false">
-        </div>
-
-        <div class="g_id_signin"
-             data-type="standard"
-             data-shape="rectangular"
-             data-theme="outline"
-             data-text="signin_with"
-             data-size="large"
-             data-logo_alignment="left"
-             data-width="300">
-        </div>
+        <button type="button" class="google-btn" id="customGoogleBtn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width:20px; margin-right:10px;">
+          Iniciar sesión con Google
+        </button>
       </form>
     </div>
 
