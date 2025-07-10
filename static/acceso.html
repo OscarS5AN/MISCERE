@@ -819,137 +819,144 @@ body {
     });
 
     // Manejo del formulario de login
-    loginForm.addEventListener('submit', async function(e) {
-      e.preventDefault();
-      
-      const email = this.Correo.value.trim();
-      const password = this.Clave.value;
-      
-      // Resetear errores
-      document.getElementById('loginEmailError').style.display = 'none';
-      document.getElementById('loginPasswordError').style.display = 'none';
-      loginError.style.display = 'none';
-      
-      let isValid = true;
-      
-      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+loginForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const email = this.Correo.value.trim();
+    const password = this.Clave.value;
+    
+    // Resetear errores
+    document.getElementById('loginEmailError').style.display = 'none';
+    document.getElementById('loginPasswordError').style.display = 'none';
+    loginError.style.display = 'none';
+    
+    let isValid = true;
+    
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         document.getElementById('loginEmailError').textContent = 'Ingresa un correo electrónico válido';
         document.getElementById('loginEmailError').style.display = 'block';
         this.Correo.classList.add('input-error');
         isValid = false;
-      }
-      
-      if (!password) {
+    }
+    
+    if (!password) {
         document.getElementById('loginPasswordError').textContent = 'La contraseña es requerida';
         document.getElementById('loginPasswordError').style.display = 'block';
         this.Clave.classList.add('input-error');
         isValid = false;
-      }
-      
-      if (!isValid) return;
-      
-      // Mostrar spinner en el botón
-      const originalText = loginButton.innerHTML;
-      loginButton.innerHTML = '<span class="spinner"></span> Iniciando sesión...';
-      loginButton.disabled = true;
-      
-      try {
+    }
+    
+    if (!isValid) return;
+    
+    // Mostrar spinner en el botón
+    const originalText = loginButton.innerHTML;
+    loginButton.innerHTML = '<span class="spinner"></span> Iniciando sesión...';
+    loginButton.disabled = true;
+    
+    try {
         const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            Correo: email,
-            Clave: password
-          })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                Correo: email,
+                Clave: password
+            })
         });
         
         const data = await response.json();
         
         if (!response.ok) {
-          throw new Error(data.error || 'Error en el inicio de sesión');
+            throw new Error(data.error || 'Error en el inicio de sesión');
         }
         
-        // Login exitoso, redirigir
-        window.location.href = '/panel.html';
+        // Redirigir según el tipo de usuario
+        window.location.href = data.redirect || '/panel.html';
         
-      } catch (error) {
+    } catch (error) {
         loginError.textContent = error.message;
         loginError.style.display = 'block';
         console.error('Error en el login:', error);
-      } finally {
+    } finally {
         loginButton.innerHTML = originalText;
         loginButton.disabled = false;
-      }
-    });
+    }
+});
 
-    // Manejo de autenticación con Google
-    function handleGoogleSignIn(response) {
-      console.log('Google response:', response);
-      
-      // Mostrar spinner en el botón de Google
-      const googleButton = document.querySelector('.g_id_signin');
-      googleButton.style.opacity = '0.5';
-      googleButton.innerHTML = '<span class="spinner"></span> Procesando...';
-      googleButton.disabled = true;
-      
-      // Enviar el token al servidor
-      fetch('/api/google-auth', {
+// Manejo de autenticación con Google
+function handleGoogleSignIn(response) {
+    console.log('Google response:', response);
+    
+    // Mostrar spinner en el botón de Google
+    const googleButton = document.querySelector('.g_id_signin');
+    googleButton.style.opacity = '0.5';
+    googleButton.innerHTML = '<span class="spinner"></span> Procesando...';
+    googleButton.disabled = true;
+    
+    // Enviar el token al servidor
+    fetch('/api/google-auth', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+            'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          token: response.credential
+            token: response.credential
         })
-      })
-      .then(res => res.json())
-      .then(data => {
+    })
+    .then(res => res.json())
+    .then(data => {
         if (data.error) {
-          throw new Error(data.error);
+            throw new Error(data.error);
         }
         
-        // Autenticación exitosa, redirigir
-        window.location.href = '/panel.html';
-      })
-      .catch(error => {
+        // Redirigir según el tipo de usuario
+        window.location.href = data.redirect || '/panel.html';
+    })
+    .catch(error => {
         loginError.textContent = error.message;
         loginError.style.display = 'block';
         console.error('Error en autenticación con Google:', error);
         
         // Reiniciar el botón de Google
         google.accounts.id.renderButton(
-          googleButton,
-          {
-            type: 'standard',
-            shape: 'rectangular',
-            theme: 'outline',
-            text: 'signin_with',
-            size: 'large',
-            logo_alignment: 'left',
-            width: '300'
-          }
+            googleButton,
+            {
+                type: 'standard',
+                shape: 'rectangular',
+                theme: 'outline',
+                text: 'signin_with',
+                size: 'large',
+                logo_alignment: 'left',
+                width: '300'
+            }
         );
-      });
-    }
+    });
+}
 
-    // Verificar si el usuario ya está autenticado
-    async function checkAuth() {
-      try {
+// Verificar si el usuario ya está autenticado
+async function checkAuth() {
+    try {
         const response = await fetch('/api/check-auth');
         const data = await response.json();
         
         if (data.isAuthenticated) {
-          window.location.href = '/panel.html';
+            // Redirigir según el tipo de usuario
+            let redirectUrl = '/panel.html';
+            if (data.user.type === 'proveedor') redirectUrl = '/panel-proveedor.html';
+            else if (data.user.type === 'owner') redirectUrl = '/panel-owner.html';
+            else if (data.user.type === 'administrador') redirectUrl = '/panel-admin.html';
+            
+            window.location.href = redirectUrl;
         }
-      } catch (error) {
+    } catch (error) {
         console.error('Error verificando autenticación:', error);
-      }
     }
+}
 
-    // Verificar autenticación al cargar la página
-    checkAuth();
+// Verificar autenticación al cargar la página
+checkAuth();
+
   </script>
 </body>
 </html>

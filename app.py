@@ -45,6 +45,19 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# ------------------- FUNCIÓN PARA OBTENER URL DE REDIRECCIÓN -------------------
+def get_redirect_url(user_type):
+    if user_type == 'cliente':
+        return '/panel.html'
+    elif user_type == 'proveedor':
+        return '/panel-proveedor.html'
+    elif user_type == 'owner':
+        return '/panel-owner.html'
+    elif user_type == 'administrador':
+        return '/panel-admin.html'
+    else:
+        return '/panel.html'
+
 # ------------------- RUTAS DE AUTENTICACIÓN -------------------
 @app.route('/api/register', methods=['POST'])
 def register():
@@ -120,7 +133,8 @@ def register():
         return jsonify({
             'message': 'Registro exitoso',
             'user_id': user_id,
-            'user_type': data['userType']
+            'user_type': data['userType'],
+            'redirect': get_redirect_url(data['userType'])
         }), 201
         
     except Error as e:
@@ -178,7 +192,8 @@ def login():
                 'email': user['Correo'],
                 'username': user['NombreUsuario'],
                 'type': user['Cargo']
-            }
+            },
+            'redirect': get_redirect_url(user['Cargo'])
         })
         
     except Error as e:
@@ -254,7 +269,8 @@ def google_auth():
                         'email': email,
                         'username': user['NombreUsuario'],
                         'type': user['Cargo']
-                    }
+                    },
+                    'redirect': get_redirect_url(user['Cargo'])
                 })
             else:
                 # Crear nuevo usuario
@@ -307,7 +323,8 @@ def google_auth():
                         'email': email,
                         'username': username,
                         'type': 'cliente'
-                    }
+                    },
+                    'redirect': '/panel.html'
                 }), 201
                 
         except Error as e:
@@ -385,6 +402,158 @@ def add_header(response):
     response.headers['Pragma'] = 'no-cache'
     response.headers['Expires'] = '-1'
     return response
+
+# ------------------- RUTAS DE RECUPERACIÓN DE CONTRASEÑA -------------------
+@app.route('/api/check-email', methods=['POST'])
+def check_email():
+    data = request.get_json()
+    
+    if 'email' not in data:
+        return jsonify({'error': 'Email es requerido'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+    
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT Id FROM Usuario WHERE Correo = %s", (data['email'],))
+        user = cursor.fetchone()
+        
+        return jsonify({'exists': bool(user)})
+        
+    except Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/check-phone', methods=['POST'])
+def check_phone():
+    data = request.get_json()
+    
+    if 'phone' not in data:
+        return jsonify({'error': 'Teléfono es requerido'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+    
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute("SELECT Id FROM Usuario WHERE Telefono = %s", (data['phone'],))
+        user = cursor.fetchone()
+        
+        return jsonify({'exists': bool(user)})
+        
+    except Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/api/send-recovery-code', methods=['POST'])
+def send_recovery_code():
+    data = request.get_json()
+    
+    if 'method' not in data:
+        return jsonify({'error': 'Método de recuperación es requerido'}), 400
+    
+    # Generar código de 6 dígitos
+    code = ''.join([str(secrets.randbelow(10)) for _ in range(6)])
+    
+    if data['method'] == 'email':
+        if 'email' not in data:
+            return jsonify({'error': 'Email es requerido para este método'}), 400
+        
+        print(f"Código de recuperación para {data['email']}: {code}")
+        return jsonify({'message': 'Código enviado al correo electrónico', 'code': code})
+    
+    elif data['method'] == 'phone':
+        if 'phone' not in data:
+            return jsonify({'error': 'Teléfono es requerido para este método'}), 400
+        
+        print(f"Código de recuperación para {data['phone']}: {code}")
+        return jsonify({'message': 'Código enviado al teléfono', 'code': code})
+    
+    return jsonify({'error': 'Método de recuperación no válido'}), 400
+
+@app.route('/api/verify-recovery-code', methods=['POST'])
+def verify_recovery_code():
+    data = request.get_json()
+    
+    if 'code' not in data or 'method' not in data:
+        return jsonify({'error': 'Código y método son requeridos'}), 400
+    
+    if len(data['code']) != 6 or not data['code'].isdigit():
+        return jsonify({'error': 'Código inválido'}), 400
+    
+    return jsonify({'message': 'Código verificado correctamente'})
+
+@app.route('/api/update-password', methods=['POST'])
+def update_password():
+    data = request.get_json()
+    
+    if 'newPassword' not in data or 'method' not in data:
+        return jsonify({'error': 'Nueva contraseña y método son requeridos'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+    
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Buscar usuario por email o teléfono
+        if data['method'] == 'email':
+            if 'email' not in data:
+                return jsonify({'error': 'Email es requerido para este método'}), 400
+            
+            cursor.execute("SELECT Id, Salt FROM Usuario WHERE Correo = %s", (data['email'],))
+        elif data['method'] == 'phone':
+            if 'phone' not in data:
+                return jsonify({'error': 'Teléfono es requerido para este método'}), 400
+            
+            cursor.execute("SELECT Id, Salt FROM Usuario WHERE Telefono = %s", (data['phone'],))
+        else:
+            return jsonify({'error': 'Método no válido'}), 400
+        
+        user = cursor.fetchone()
+        
+        if not user:
+            return jsonify({'error': 'Usuario no encontrado'}), 404
+        
+        # Generar nuevo hash de contraseña
+        salt = secrets.token_hex(16) if not user['Salt'] else user['Salt']
+        hashed_password = generate_password_hash(data['newPassword'] + salt)
+        
+        # Actualizar contraseña
+        cursor.execute("""
+            UPDATE Usuario 
+            SET Clave = %s, Salt = %s 
+            WHERE Id = %s
+        """, (hashed_password, salt, user['Id']))
+        
+        conn.commit()
+        
+        return jsonify({'message': 'Contraseña actualizada correctamente'})
+        
+    except Error as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+# Ruta para servir changepassword.html
+@app.route('/changepassword.html')
+def change_password():
+    return app.send_static_file('changepassword.html')
+
+
+
 
 # ------------------- MAIN -------------------
 if __name__ == '__main__':
