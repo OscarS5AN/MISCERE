@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menú Moderno</title>
+    <title>Panel de Usuario - MISCERE</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
         :root {
@@ -17,6 +17,8 @@
             --border-color: #e0e0e0;
             --header-height: 70px;
             --sidebar-width: 280px;
+            --error-color: #e53935;
+            --success-color: #43a047;
         }
 
         * {
@@ -157,6 +159,14 @@
             cursor: pointer;
             transition: all 0.3s;
             background-image: linear-gradient(135deg, #6A0DAD, #9C27B0);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .user-avatar:hover {
@@ -334,27 +344,554 @@
             visibility: visible;
         }
 
-        /* Animations */
-        @keyframes fadeInLeft {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .menu-item {
-            animation: fadeInLeft 0.4s ease-out forwards;
+        /* User Profile Modal */
+        .profile-modal {
+            position: fixed;
+            top: var(--header-height);
+            right: 20px;
+            width: 350px;
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            transform: translateY(-20px);
             opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            max-height: calc(100vh - var(--header-height) - 40px);
+            overflow-y: auto;
         }
 
-        .menu-item:nth-child(1) { animation-delay: 0.1s; }
-        .menu-item:nth-child(2) { animation-delay: 0.2s; }
-        .menu-item:nth-child(3) { animation-delay: 0.3s; }
-        .menu-item:nth-child(4) { animation-delay: 0.4s; }
-        .menu-item:nth-child(5) { animation-delay: 0.5s; }
-        .menu-item:nth-child(6) { animation-delay: 0.6s; }
-        .menu-item:nth-child(7) { animation-delay: 0.7s; }
-        .menu-item:nth-child(8) { animation-delay: 0.8s; }
-        .menu-item:nth-child(9) { animation-delay: 0.9s; }
-        .menu-item:nth-child(10) { animation-delay: 1s; }
+        .profile-modal.active {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .profile-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            gap: 15px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-right: 15px;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-avatar-edit {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            text-align: center;
+            padding: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .profile-avatar:hover .profile-avatar-edit {
+            opacity: 1;
+            
+        }
+
+        .profile-info {
+            flex: 1;
+            min-width: 0; /* Permite que el texto fluya */
+            padding-right: 40px; /* Espacio para el botón */
+        }
+
+        .profile-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            word-break: break-word; /* Salto de línea cuando sea necesario */
+            overflow-wrap: break-word; /* Rompe palabras largas */
+        }
+
+        .profile-role {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background-color: rgba(106, 13, 173, 0.1);
+            padding: 3px 8px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .profile-edit-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+            padding: 5px;
+        }
+
+        .profile-edit-btn:hover {
+            transform: rotate(15deg);
+        }
+
+        .profile-details {
+            padding: 20px;
+        }
+
+        .profile-field {
+            margin-bottom: 15px;
+        }
+
+        .profile-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .profile-value {
+            font-size: 0.95rem;
+            color: var(--text-color);
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .profile-actions {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .profile-btn {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .profile-btn i {
+            margin-right: 10px;
+        }
+
+        .profile-btn:hover {
+            background-color: rgba(106, 13, 173, 0.1);
+            color: var(--primary-color);
+        }
+
+        .profile-btn.logout {
+            color: var(--error-color);
+        }
+
+        .profile-btn.logout:hover {
+            background-color: rgba(229, 57, 53, 0.1);
+        }
+
+        /* Edit Profile Modal */
+        .edit-profile-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1002;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .edit-profile-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .edit-profile-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+
+        .edit-profile-modal.active .edit-profile-container {
+            transform: translateY(0);
+        }
+
+        .edit-profile-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .edit-profile-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .edit-profile-close {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .edit-profile-close:hover {
+            color: var(--primary-color);
+        }
+
+        .edit-profile-form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2);
+            outline: none;
+        }
+
+        .form-control.error {
+            border-color: var(--error-color);
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        /* Change Password Section */
+        .change-password-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .change-password-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .change-password-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .change-password-icon {
+            transition: transform 0.3s;
+        }
+
+        .change-password-toggle.active .change-password-icon {
+            transform: rotate(180deg);
+        }
+
+        .change-password-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .change-password-toggle.active + .change-password-content {
+            max-height: 500px;
+        }
+
+        /* Avatar Modal */
+        .avatar-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1003;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .avatar-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .avatar-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .avatar-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            background-color: #f5f5f5;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .avatar-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-preview .initials {
+            font-size: 3rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #6A0DAD, #9C27B0);
+        }
+
+        .avatar-options {
+            margin: 20px 0;
+        }
+
+        .avatar-option-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .avatar-option-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .avatar-option-btn.secondary {
+            background-color: transparent;
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+        }
+
+        .avatar-option-btn.secondary:hover {
+            background-color: #f5f5f5;
+        }
+
+        .avatar-option-btn.danger {
+            background-color: transparent;
+            color: var(--error-color);
+            border: 1px solid var(--error-color);
+        }
+
+        .avatar-option-btn.danger:hover {
+            background-color: rgba(229, 57, 53, 0.1);
+        }
+
+        .avatar-file-input {
+            display: none;
+        }
+
+        /* Confirmation Modal */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1004;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .confirmation-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirmation-container {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            transform: translateY(-20px);
+            transition: transform 0.3s;
+        }
+
+        .confirmation-modal.active .confirmation-container {
+            transform: translateY(0);
+        }
+
+        .confirmation-icon {
+            font-size: 3rem;
+            color: var(--error-color);
+            margin-bottom: 15px;
+        }
+
+        .confirmation-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .confirmation-message {
+            font-size: 0.95rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .confirmation-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Success Message */
+        .success-message {
+            background-color: rgba(67, 160, 71, 0.2);
+            color: var(--success-color);
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        /* Spinner */
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
 
         /* Responsive Styles */
         @media (max-width: 768px) {
@@ -368,6 +905,11 @@
 
             .header-icons {
                 gap: 10px;
+            }
+
+            .profile-modal {
+                width: 90%;
+                right: 5%;
             }
         }
     </style>
@@ -389,7 +931,7 @@
                 <span class="icon-badge">3</span>
             </div>
             <div class="user-avatar" id="userAvatar">
-                <i class="fas fa-user"></i>
+                <div id="avatarInitials"></div>
             </div>
         </div>
     </header>
@@ -457,83 +999,713 @@
     <!-- Overlay -->
     <div class="overlay" id="overlay"></div>
 
+    <!-- Profile Modal -->
+    <div class="profile-modal" id="profileModal">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">
+                <div id="profileAvatarInitials"></div>
+                <div class="profile-avatar-edit">Cambiar foto</div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-name" id="profileName"></div>
+                <div class="profile-role" id="profileRole"></div>
+            </div>
+            <button class="profile-edit-btn" id="profileEditBtn">
+                <i class="fas fa-edit"></i>
+            </button>
+        </div>
+        <div class="profile-details">
+            <div class="profile-field">
+                <div class="profile-label">Nombre de usuario</div>
+                <div class="profile-value" id="profileUsername"></div>
+            </div>
+            <div class="profile-field">
+                <div class="profile-label">Correo electrónico</div>
+                <div class="profile-value" id="profileEmail"></div>
+            </div>
+            <div class="profile-field">
+                <div class="profile-label">Teléfono</div>
+                <div class="profile-value" id="profilePhone"></div>
+            </div>
+        </div>
+        <div class="profile-actions">
+            <button class="profile-btn" id="changePasswordBtn">
+                <i class="fas fa-key"></i> Cambiar contraseña
+            </button>
+            <button class="profile-btn logout" id="logoutBtn">
+                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
+            </button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="edit-profile-modal" id="editProfileModal">
+        <div class="edit-profile-container">
+            <div class="edit-profile-header">
+                <div class="edit-profile-title">Editar perfil</div>
+                <button class="edit-profile-close" id="editProfileClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="success-message" id="editSuccessMessage"></div>
+            <form class="edit-profile-form" id="editProfileForm">
+                <div class="form-group">
+                    <label class="form-label" for="editUsername">Nombre de usuario</label>
+                    <input type="text" class="form-control" id="editUsername" required>
+                    <div class="error-message" id="usernameError"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="editPhone">Teléfono</label>
+                    <input type="tel" class="form-control" id="editPhone">
+                    <div class="error-message" id="phoneError"></div>
+                </div>
+                
+                <div class="change-password-section">
+                    <div class="change-password-toggle" id="changePasswordToggle">
+                        <div class="change-password-title">Cambiar contraseña</div>
+                        <div class="change-password-icon">
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                    </div>
+                    <div class="change-password-content" id="changePasswordContent">
+                        <div class="form-group">
+                            <label class="form-label" for="currentPassword">Contraseña actual</label>
+                            <input type="password" class="form-control" id="currentPassword">
+                            <div class="error-message" id="currentPasswordError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="newPassword">Nueva contraseña</label>
+                            <input type="password" class="form-control" id="newPassword">
+                            <div class="error-message" id="newPasswordError"></div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="confirmPassword">Confirmar nueva contraseña</label>
+                            <input type="password" class="form-control" id="confirmPassword">
+                            <div class="error-message" id="confirmPasswordError"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelEditBtn">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="saveProfileBtn">Guardar cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Avatar Modal -->
+    <div class="avatar-modal" id="avatarModal">
+        <div class="avatar-container">
+            <div class="avatar-preview" id="avatarPreview">
+                <div id="avatarPreviewInitials"></div>
+            </div>
+            <input type="file" id="avatarFileInput" class="avatar-file-input" accept="image/*">
+            <div class="avatar-options">
+                <button class="avatar-option-btn" id="uploadAvatarBtn">
+                    <i class="fas fa-upload"></i> Subir nueva foto
+                </button>
+                <button class="avatar-option-btn secondary" id="viewAvatarBtn">
+                    <i class="fas fa-eye"></i> Ver foto actual
+                </button>
+                <button class="avatar-option-btn danger" id="removeAvatarBtn">
+                    <i class="fas fa-trash"></i> Eliminar foto
+                </button>
+            </div>
+            <button class="avatar-option-btn secondary" id="closeAvatarModalBtn">
+                <i class="fas fa-times"></i> Cerrar
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="confirmation-modal" id="confirmationModal">
+        <div class="confirmation-container">
+            <div class="confirmation-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="confirmation-title">¿Estás seguro?</div>
+            <div class="confirmation-message">¿Realmente deseas cerrar sesión?</div>
+            <div class="confirmation-actions">
+                <button class="btn btn-secondary" id="cancelLogoutBtn">Cancelar</button>
+                <button class="btn btn-primary" id="confirmLogoutBtn">Sí, cerrar sesión</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Toggle sidebar
+        // DOM Elements
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
-
-        menuToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            
-            // Bloquear scroll del body cuando el menú está abierto
-            document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
-        });
-
-        // Cerrar menú al hacer clic en el overlay
-        overlay.addEventListener('click', () => {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        });
-
-        // Submenu functionality
-        const menuItems = document.querySelectorAll('.menu-item.has-submenu');
-        
-        menuItems.forEach(item => {
-            item.addEventListener('click', (e) => {
-                // Evitar que se cierre el menú al hacer clic en un ítem con submenú
-                e.stopPropagation();
-                
-                const submenu = item.nextElementSibling;
-                submenu.classList.toggle('open');
-                item.classList.toggle('open');
-            });
-        });
-
-        // Active menu item
-        const menuLinks = document.querySelectorAll('.menu-item:not(.has-submenu), .submenu-item');
-        
-        menuLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                // Prevenir comportamiento por defecto solo para demostración
-                e.preventDefault();
-                
-                // Remover active de todos los ítems
-                menuLinks.forEach(l => l.classList.remove('active'));
-                
-                // Agregar active al ítem clickeado
-                link.classList.add('active');
-                
-                // Si es un submenú item, también activar su padre
-                if (link.classList.contains('submenu-item')) {
-                    link.closest('.submenu').previousElementSibling.classList.add('active');
-                }
-                
-                // Cerrar menú en móvil después de seleccionar
-                if (window.innerWidth < 769) {
-                    sidebar.classList.remove('open');
-                    overlay.classList.remove('active');
-                    document.body.style.overflow = 'auto';
-                }
-            });
-        });
-
-        // User avatar click
         const userAvatar = document.getElementById('userAvatar');
-        userAvatar.addEventListener('click', () => {
-            alert('Menú de usuario');
-        });
+        const profileModal = document.getElementById('profileModal');
+        const profileEditBtn = document.getElementById('profileEditBtn');
+        const editProfileModal = document.getElementById('editProfileModal');
+        const editProfileClose = document.getElementById('editProfileClose');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const editProfileForm = document.getElementById('editProfileForm');
+        const changePasswordToggle = document.getElementById('changePasswordToggle');
+        const changePasswordContent = document.getElementById('changePasswordContent');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const cancelLogoutBtn = document.getElementById('cancelLogoutBtn');
+        const confirmLogoutBtn = document.getElementById('confirmLogoutBtn');
+        const profileAvatar = document.getElementById('profileAvatar');
+        const avatarModal = document.getElementById('avatarModal');
+        const uploadAvatarBtn = document.getElementById('uploadAvatarBtn');
+        const viewAvatarBtn = document.getElementById('viewAvatarBtn');
+        const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+        const closeAvatarModalBtn = document.getElementById('closeAvatarModalBtn');
+        const avatarFileInput = document.getElementById('avatarFileInput');
+        const avatarPreview = document.getElementById('avatarPreview');
+        const editSuccessMessage = document.getElementById('editSuccessMessage');
+        
+        // User data
+        let userData = {};
 
-        // Cerrar menú al cambiar tamaño de pantalla
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 769) {
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            // Toggle sidebar
+            menuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+                overlay.classList.toggle('active');
+                document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+            });
+
+            // Close sidebar with overlay
+            overlay.addEventListener('click', () => {
                 sidebar.classList.remove('open');
                 overlay.classList.remove('active');
                 document.body.style.overflow = 'auto';
-            }
+            });
+
+            // Submenu functionality
+            const menuItems = document.querySelectorAll('.menu-item.has-submenu');
+            menuItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const submenu = item.nextElementSibling;
+                    submenu.classList.toggle('open');
+                    item.classList.toggle('open');
+                });
+            });
+
+            // Active menu item
+            const menuLinks = document.querySelectorAll('.menu-item:not(.has-submenu), .submenu-item');
+            menuLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    menuLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    
+                    if (link.classList.contains('submenu-item')) {
+                        link.closest('.submenu').previousElementSibling.classList.add('active');
+                    }
+                    
+                    if (window.innerWidth < 769) {
+                        sidebar.classList.remove('open');
+                        overlay.classList.remove('active');
+                        document.body.style.overflow = 'auto';
+                    }
+                });
+            });
+
+            // User avatar click
+            userAvatar.addEventListener('click', toggleProfileModal);
+            
+            // Edit profile button
+            profileEditBtn.addEventListener('click', openEditProfileModal);
+            
+            // Close edit modal
+            editProfileClose.addEventListener('click', closeEditProfileModal);
+            cancelEditBtn.addEventListener('click', closeEditProfileModal);
+            
+            // Change password toggle
+            changePasswordToggle.addEventListener('click', () => {
+                changePasswordToggle.classList.toggle('active');
+                changePasswordContent.style.maxHeight = changePasswordToggle.classList.contains('active') 
+                    ? changePasswordContent.scrollHeight + 'px' 
+                    : '0';
+            });
+            
+            // Change password button in profile
+            changePasswordBtn.addEventListener('click', () => {
+                closeProfileModal();
+                openEditProfileModal();
+                changePasswordToggle.classList.add('active');
+                changePasswordContent.style.maxHeight = changePasswordContent.scrollHeight + 'px';
+                document.getElementById('currentPassword').focus();
+            });
+            
+            // Logout button
+            logoutBtn.addEventListener('click', () => {
+                confirmationModal.classList.add('active');
+            });
+            
+            // Confirmation modal buttons
+            cancelLogoutBtn.addEventListener('click', () => {
+                confirmationModal.classList.remove('active');
+            });
+            
+            confirmLogoutBtn.addEventListener('click', logoutUser);
+            
+            // Profile avatar click
+            profileAvatar.addEventListener('click', () => {
+                avatarModal.classList.add('active');
+            });
+            
+            // Avatar modal buttons
+            uploadAvatarBtn.addEventListener('click', () => {
+                avatarFileInput.click();
+            });
+            
+            viewAvatarBtn.addEventListener('click', () => {
+                // In a real app, this would show the full-size avatar
+                alert('Mostrando foto de perfil completa');
+            });
+            
+            removeAvatarBtn.addEventListener('click', removeAvatar);
+            
+            closeAvatarModalBtn.addEventListener('click', () => {
+                avatarModal.classList.remove('active');
+            });
+            
+            // File input change
+            avatarFileInput.addEventListener('change', handleAvatarUpload);
+            
+            // Form submission
+            editProfileForm.addEventListener('submit', saveProfileChanges);
+            
+            // Close modals when clicking outside
+            document.addEventListener('click', (e) => {
+                if (profileModal.classList.contains('active') && 
+                    !profileModal.contains(e.target) && 
+                    e.target !== userAvatar) {
+                    closeProfileModal();
+                }
+            });
+            
+            // Close modals with ESC key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    if (profileModal.classList.contains('active')) closeProfileModal();
+                    if (editProfileModal.classList.contains('active')) closeEditProfileModal();
+                    if (avatarModal.classList.contains('active')) avatarModal.classList.remove('active');
+                    if (confirmationModal.classList.contains('active')) confirmationModal.classList.remove('active');
+                }
+            });
         });
+
+        // Toggle profile modal
+        function toggleProfileModal() {
+            if (profileModal.classList.contains('active')) {
+                closeProfileModal();
+            } else {
+                openProfileModal();
+            }
+        }
+
+        // Open profile modal
+        function openProfileModal() {
+            profileModal.classList.add('active');
+            overlay.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close profile modal
+        function closeProfileModal() {
+            profileModal.classList.remove('active');
+            overlay.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Open edit profile modal
+        function openEditProfileModal() {
+            editProfileModal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Fill form with current data
+            document.getElementById('editUsername').value = userData.NombreUsuario || '';
+            document.getElementById('editPhone').value = userData.Telefono || '';
+            
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            
+            // Clear errors
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Hide success message
+            editSuccessMessage.style.display = 'none';
+        }
+
+        // Close edit profile modal
+        function closeEditProfileModal() {
+            editProfileModal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Check authentication and load user data
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth');
+                const data = await response.json();
+                
+                if (data.isAuthenticated) {
+                    userData = data.user;
+                    updateProfileUI();
+                } else {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+            }
+        }
+
+        // Update profile UI with user data
+        function updateProfileUI() {
+            // Header avatar
+            const avatarInitials = document.getElementById('avatarInitials');
+            if (userData.Foto) {
+                avatarInitials.innerHTML = `<img src="${userData.Foto}" alt="Avatar">`;
+            } else {
+                const initials = (userData.Nombre ? userData.Nombre.charAt(0) : '') + 
+                                (userData.Apellido ? userData.Apellido.charAt(0) : '');
+                avatarInitials.innerHTML = initials || '<i class="fas fa-user"></i>';
+                avatarInitials.style.fontSize = initials ? '1.2rem' : '1rem';
+            }
+            
+            // Profile modal
+            document.getElementById('profileName').textContent = 
+                `${userData.Nombre || ''} ${userData.Apellido || ''}`.trim() || 'Usuario';
+            document.getElementById('profileRole').textContent = 
+                userData.type === 'cliente' ? 'Cliente' : 
+                userData.type === 'proveedor' ? 'Proveedor' : 
+                userData.type === 'owner' ? 'Dueño de tienda' : 
+                userData.type === 'administrador' ? 'Administrador' : 'Usuario';
+            document.getElementById('profileUsername').textContent = userData.NombreUsuario || 'No definido';
+            document.getElementById('profileEmail').textContent = userData.email || 'No definido';
+            document.getElementById('profilePhone').textContent = userData.Telefono || 'No definido';
+            document.getElementById('profileGender').textContent = 
+                userData.Genero === 'masculino' ? 'Masculino' : 
+                userData.Genero === 'femenino' ? 'Femenino' : 
+                userData.Genero === 'otro' ? 'Otro' : 
+                userData.Genero === 'prefiero_no_decir' ? 'Prefiero no decir' : 'No definido';
+            document.getElementById('profileBirthdate').textContent = 
+                userData.FechaNacimiento ? new Date(userData.FechaNacimiento).toLocaleDateString() : 'No definido';
+            
+            // Profile avatar
+            const profileAvatarInitials = document.getElementById('profileAvatarInitials');
+            if (userData.Foto) {
+                profileAvatarInitials.innerHTML = `<img src="${userData.Foto}" alt="Avatar">`;
+            } else {
+                const initials = (userData.Nombre ? userData.Nombre.charAt(0) : '') + 
+                                (userData.Apellido ? userData.Apellido.charAt(0) : '');
+                profileAvatarInitials.innerHTML = initials || '<i class="fas fa-user"></i>';
+                profileAvatarInitials.style.fontSize = initials ? '2.5rem' : '2rem';
+            }
+            
+            // Avatar preview in avatar modal
+            const avatarPreviewInitials = document.getElementById('avatarPreviewInitials');
+            if (userData.Foto) {
+                avatarPreviewInitials.innerHTML = `<img src="${userData.Foto}" alt="Avatar">`;
+                viewAvatarBtn.style.display = 'block';
+                removeAvatarBtn.style.display = 'block';
+            } else {
+                const initials = (userData.Nombre ? userData.Nombre.charAt(0) : '') + 
+                                (userData.Apellido ? userData.Apellido.charAt(0) : '');
+                avatarPreviewInitials.innerHTML = initials || '<i class="fas fa-user"></i>';
+                avatarPreviewInitials.className = 'initials';
+                avatarPreviewInitials.style.fontSize = initials ? '3rem' : '2.5rem';
+                viewAvatarBtn.style.display = 'none';
+                removeAvatarBtn.style.display = 'none';
+            }
+        }
+
+        // Handle avatar upload
+        function handleAvatarUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('Por favor selecciona un archivo de imagen válido');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024) {
+                alert('La imagen no debe exceder los 2MB');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    // In a real app, you would upload the image to the server here
+                    // For this example, we'll just update the UI
+                    const imageUrl = event.target.result;
+                    
+                    // Update user data
+                    userData.Foto = imageUrl;
+                    
+                    // Update all avatar displays
+                    updateProfileUI();
+                    
+                    // Show success message
+                    alert('Foto de perfil actualizada correctamente');
+                    
+                    // Close avatar modal
+                    avatarModal.classList.remove('active');
+                    
+                    // In a real app, you would send the image to the server:
+                    /*
+                    const formData = new FormData();
+                    formData.append('avatar', file);
+                    
+                    const response = await fetch('/api/update-avatar', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    if (response.ok) {
+                        userData.Foto = data.avatarUrl;
+                        updateProfileUI();
+                        alert('Foto de perfil actualizada correctamente');
+                        avatarModal.classList.remove('active');
+                    } else {
+                        throw new Error(data.error || 'Error al actualizar la foto de perfil');
+                    }
+                    */
+                } catch (error) {
+                    console.error('Error uploading avatar:', error);
+                    alert('Error al actualizar la foto de perfil');
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Remove avatar
+        function removeAvatar() {
+            if (confirm('¿Estás seguro de que deseas eliminar tu foto de perfil?')) {
+                try {
+                    // In a real app, you would send a request to the server to remove the avatar
+                    // For this example, we'll just update the UI
+                    
+                    // Update user data
+                    userData.Foto = null;
+                    
+                    // Update all avatar displays
+                    updateProfileUI();
+                    
+                    // Show success message
+                    alert('Foto de perfil eliminada correctamente');
+                    
+                    // Close avatar modal
+                    avatarModal.classList.remove('active');
+                    
+                    // In a real app, you would do something like:
+                    /*
+                    const response = await fetch('/api/remove-avatar', {
+                        method: 'DELETE'
+                    });
+                    
+                    const data = await response.json();
+                    if (response.ok) {
+                        userData.Foto = null;
+                        updateProfileUI();
+                        alert('Foto de perfil eliminada correctamente');
+                        avatarModal.classList.remove('active');
+                    } else {
+                        throw new Error(data.error || 'Error al eliminar la foto de perfil');
+                    }
+                    */
+                } catch (error) {
+                    console.error('Error removing avatar:', error);
+                    alert('Error al eliminar la foto de perfil');
+                }
+            }
+        }
+
+        // Save profile changes
+        async function saveProfileChanges(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const username = document.getElementById('editUsername').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Reset error messages
+            document.querySelectorAll('.error-message').forEach(el => {
+                el.style.display = 'none';
+                el.textContent = '';
+            });
+            
+            let isValid = true;
+            
+            // Validate username
+            if (!username) {
+                document.getElementById('usernameError').textContent = 'El nombre de usuario es requerido';
+                document.getElementById('usernameError').style.display = 'block';
+                document.getElementById('editUsername').classList.add('error');
+                isValid = false;
+            } else if (username.length < 3) {
+                document.getElementById('usernameError').textContent = 'El nombre de usuario debe tener al menos 3 caracteres';
+                document.getElementById('usernameError').style.display = 'block';
+                document.getElementById('editUsername').classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('editUsername').classList.remove('error');
+            }
+            
+            // Validate phone (if provided)
+            if (phone && !/^[\d\s+-]+$/.test(phone)) {
+                document.getElementById('phoneError').textContent = 'El teléfono no es válido';
+                document.getElementById('phoneError').style.display = 'block';
+                document.getElementById('editPhone').classList.add('error');
+                isValid = false;
+            } else {
+                document.getElementById('editPhone').classList.remove('error');
+            }
+            
+            // Validate password if changing
+            if (currentPassword || newPassword || confirmPassword) {
+                if (!currentPassword) {
+                    document.getElementById('currentPasswordError').textContent = 'La contraseña actual es requerida';
+                    document.getElementById('currentPasswordError').style.display = 'block';
+                    document.getElementById('currentPassword').classList.add('error');
+                    isValid = false;
+                } else {
+                    document.getElementById('currentPassword').classList.remove('error');
+                }
+                
+                if (newPassword.length < 6) {
+                    document.getElementById('newPasswordError').textContent = 'La nueva contraseña debe tener al menos 6 caracteres';
+                    document.getElementById('newPasswordError').style.display = 'block';
+                    document.getElementById('newPassword').classList.add('error');
+                    isValid = false;
+                } else {
+                    document.getElementById('newPassword').classList.remove('error');
+                }
+                
+                if (newPassword !== confirmPassword) {
+                    document.getElementById('confirmPasswordError').textContent = 'Las contraseñas no coinciden';
+                    document.getElementById('confirmPasswordError').style.display = 'block';
+                    document.getElementById('confirmPassword').classList.add('error');
+                    isValid = false;
+                } else {
+                    document.getElementById('confirmPassword').classList.remove('error');
+                }
+            }
+            
+            if (!isValid) return;
+            
+            // Prepare data to send
+            const data = {
+                NombreUsuario: username,
+                Telefono: phone || null
+            };
+            
+            if (currentPassword) {
+                data.currentPassword = currentPassword;
+                data.newPassword = newPassword;
+            }
+            
+            try {
+                // Show loading state
+                const saveBtn = document.getElementById('saveProfileBtn');
+                const originalText = saveBtn.innerHTML;
+                saveBtn.innerHTML = '<span class="spinner"></span> Guardando...';
+                saveBtn.disabled = true;
+                
+                // Send request to server
+                const response = await fetch('/api/update-profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Error al actualizar el perfil');
+                }
+                
+                // Update local user data
+                userData.NombreUsuario = username;
+                userData.Telefono = phone;
+                
+                // Update UI
+                updateProfileUI();
+                
+                // Show success message
+                editSuccessMessage.textContent = 'Perfil actualizado correctamente';
+                editSuccessMessage.style.display = 'block';
+                
+                // Hide password section if it was open
+                if (currentPassword) {
+                    changePasswordToggle.classList.remove('active');
+                    changePasswordContent.style.maxHeight = '0';
+                }
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    closeEditProfileModal();
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                
+                // Show appropriate error message
+                if (error.message.includes('contraseña actual')) {
+                    document.getElementById('currentPasswordError').textContent = error.message;
+                    document.getElementById('currentPasswordError').style.display = 'block';
+                    document.getElementById('currentPassword').classList.add('error');
+                } else if (error.message.includes('nombre de usuario')) {
+                    document.getElementById('usernameError').textContent = error.message;
+                    document.getElementById('usernameError').style.display = 'block';
+                    document.getElementById('editUsername').classList.add('error');
+                } else {
+                    alert(error.message);
+                }
+            } finally {
+                const saveBtn = document.getElementById('saveProfileBtn');
+                saveBtn.innerHTML = originalText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Logout user
+        async function logoutUser() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    throw new Error(data.error || 'Error al cerrar sesión');
+                }
+            } catch (error) {
+                console.error('Error logging out:', error);
+                alert(error.message);
+                confirmationModal.classList.remove('active');
+            }
+        }
     </script>
 </body>
 </html>

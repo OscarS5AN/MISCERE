@@ -354,7 +354,8 @@ def check_auth():
         
         try:
             cursor.execute("""
-                SELECT Id, Nombre, Apellido, NombreUsuario, Correo, Cargo 
+                SELECT Id, Nombre, Apellido, NombreUsuario, Correo, Telefono, Cargo, Foto, 
+                       Genero, FechaNacimiento, Estado 
                 FROM Usuario 
                 WHERE Id = %s
             """, (session['user_id'],))
@@ -369,11 +370,16 @@ def check_auth():
                 'isAuthenticated': True,
                 'user': {
                     'id': user['Id'],
-                    'nombre': user['Nombre'],
-                    'apellido': user['Apellido'],
+                    'Nombre': user['Nombre'],
+                    'Apellido': user['Apellido'],
+                    'NombreUsuario': user['NombreUsuario'],
                     'email': user['Correo'],
-                    'username': user['NombreUsuario'],
-                    'type': user['Cargo']
+                    'Telefono': user['Telefono'],
+                    'type': user['Cargo'],
+                    'Foto': user['Foto'],
+                    'Genero': user['Genero'],
+                    'FechaNacimiento': str(user['FechaNacimiento']) if user['FechaNacimiento'] else None,
+                    'Estado': user['Estado']
                 }
             })
             
@@ -552,7 +558,178 @@ def update_password():
 def change_password():
     return app.send_static_file('changepassword.html')
 
+# ------------------- RUTAS DE PERFIL DE USUARIO -------------------
+@app.route('/api/update-profile', methods=['POST'])
+@login_required
+def update_profile():
+    data = request.get_json()
+    
+    if 'NombreUsuario' not in data:
+        return jsonify({'error': 'Nombre de usuario es requerido'}), 400
+    
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+    
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        # Verificar si el nuevo nombre de usuario ya existe (excepto para el usuario actual)
+        cursor.execute("SELECT Id FROM Usuario WHERE NombreUsuario = %s AND Id != %s", 
+                      (data['NombreUsuario'], session['user_id']))
+        if cursor.fetchone():
+            return jsonify({'error': 'El nombre de usuario ya está en uso'}), 400
+        
+        # Actualizar datos básicos
+        update_query = """
+        UPDATE Usuario 
+        SET NombreUsuario = %s, Telefono = %s 
+        WHERE Id = %s
+        """
+        cursor.execute(update_query, (data['NombreUsuario'], data.get('Telefono'), session['user_id']))
+        
+        # Cambiar contraseña si se proporcionó
+        if 'currentPassword' in data and 'newPassword' in data:
+            # Verificar contraseña actual
+            cursor.execute("SELECT Clave, Salt FROM Usuario WHERE Id = %s", (session['user_id'],))
+            user = cursor.fetchone()
+            
+            if not check_password_hash(user['Clave'], data['currentPassword'] + user['Salt']):
+                return jsonify({'error': 'La contraseña actual es incorrecta'}), 401
+            
+            # Generar nuevo hash de contraseña
+            salt = secrets.token_hex(16)
+            hashed_password = generate_password_hash(data['newPassword'] + salt)
+            
+            # Actualizar contraseña
+            cursor.execute("UPDATE Usuario SET Clave = %s, Salt = %s WHERE Id = %s", 
+                          (hashed_password, salt, session['user_id']))
+        
+        conn.commit()
+        
+        # Obtener datos actualizados del usuario
+        cursor.execute("""
+            SELECT Id, Nombre, Apellido, NombreUsuario, Correo, Telefono, Cargo, Foto, Genero, FechaNacimiento 
+            FROM Usuario 
+            WHERE Id = %s
+        """, (session['user_id'],))
+        
+        updated_user = cursor.fetchone()
+        
+        return jsonify({
+            'message': 'Perfil actualizado correctamente',
+            'user': {
+                'id': updated_user['Id'],
+                'Nombre': updated_user['Nombre'],
+                'Apellido': updated_user['Apellido'],
+                'NombreUsuario': updated_user['NombreUsuario'],
+                'email': updated_user['Correo'],
+                'Telefono': updated_user['Telefono'],
+                'type': updated_user['Cargo'],
+                'Foto': updated_user['Foto'],
+                'Genero': updated_user['Genero'],
+                'FechaNacimiento': str(updated_user['FechaNacimiento']) if updated_user['FechaNacimiento'] else None
+            }
+        })
+        
+    except Error as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
+@app.route('/api/update-avatar', methods=['POST'])
+@login_required
+def update_avatar():
+    if 'avatar' not in request.files:
+        return jsonify({'error': 'No se proporcionó archivo de avatar'}), 400
+    
+    avatar_file = request.files['avatar']
+    
+    if avatar_file.filename == '':
+        return jsonify({'error': 'No se seleccionó archivo'}), 400
+    
+    # Validar tipo y tamaño de archivo
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+    if '.' not in avatar_file.filename or avatar_file.filename.split('.')[-1].lower() not in allowed_extensions:
+        return jsonify({'error': 'Formato de archivo no permitido'}), 400
+    
+    if avatar_file.content_length > 2 * 1024 * 1024:  # 2MB
+        return jsonify({'error': 'El archivo no debe exceder los 2MB'}), 400
+    
+    try:
+        # En un entorno real, aquí subirías el archivo a un servicio como AWS S3 o similar
+        # Por simplicidad, en este ejemplo simularemos la subida
+        
+        # Generar nombre único para el archivo
+        filename = f"avatar_{session['user_id']}_{secrets.token_hex(8)}.{avatar_file.filename.split('.')[-1].lower()}"
+        
+        # Ruta donde se guardaría el archivo (en producción usarías un servicio de almacenamiento)
+        avatar_path = os.path.join('static', 'avatars', filename)
+        avatar_file.save(avatar_path)
+        
+        # URL del avatar (en producción sería la URL del servicio de almacenamiento)
+        avatar_url = f"/static/avatars/{filename}"
+        
+        # Actualizar la base de datos
+        conn = get_db_connection()
+        if not conn:
+            return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+        
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute("UPDATE Usuario SET Foto = %s WHERE Id = %s", (avatar_url, session['user_id']))
+            conn.commit()
+            
+            return jsonify({
+                'message': 'Avatar actualizado correctamente',
+                'avatarUrl': avatar_url
+            })
+        except Error as e:
+            conn.rollback()
+            return jsonify({'error': str(e)}), 500
+        finally:
+            cursor.close()
+            conn.close()
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/remove-avatar', methods=['DELETE'])
+@login_required
+def remove_avatar():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Error de conexión a la base de datos'}), 500
+    
+    cursor = conn.cursor()
+    
+    try:
+        # Obtener la foto actual para eliminarla del almacenamiento (en producción)
+        cursor.execute("SELECT Foto FROM Usuario WHERE Id = %s", (session['user_id'],))
+        current_avatar = cursor.fetchone()[0]
+        
+        # En producción, aquí eliminarías el archivo del servicio de almacenamiento
+        if current_avatar:
+             try:
+                 os.remove(os.path.join('static', 'avatars', current_avatar.split('/')[-1]))
+             except:
+                 pass
+        
+        # Actualizar la base de datos
+        cursor.execute("UPDATE Usuario SET Foto = NULL WHERE Id = %s", (session['user_id'],))
+        conn.commit()
+        
+        return jsonify({'message': 'Avatar eliminado correctamente'})
+        
+    except Error as e:
+        conn.rollback()
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 # ------------------- MAIN -------------------
